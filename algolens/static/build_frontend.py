@@ -1,5 +1,5 @@
 """
-Script to build the unified AlgoVision / AlgoLens exact frontend.
+Script to build the unified AlgoLens exact frontend.
 Extracts the exact components from Stitch and connects them with a reactive JS engine.
 """
 

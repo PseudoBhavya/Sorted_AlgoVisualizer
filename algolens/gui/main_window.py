@@ -83,11 +83,11 @@ QHeaderView::section {
 
 
 class AlgoLensMainWindow(QMainWindow):
-    """Main window for AlgoLens desktop edition."""
+    """Main window for Sorted desktop edition."""
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("AlgoLens — Look Inside the Algorithm (Desktop Edition)")
+        self.setWindowTitle("Sorted — Look Inside the Algorithm (Desktop Edition)")
         self.resize(1200, 800)
         self.setStyleSheet(DARK_STYLESHEET)
 
@@ -111,7 +111,7 @@ class AlgoLensMainWindow(QMainWindow):
 
         # 1. Top Header Bar
         header_layout = QHBoxLayout()
-        title_label = QLabel("⚡ AlgoLens Desktop")
+        title_label = QLabel("⚡ Sorted Desktop")
         title_label.setFont(QFont("Helvetica", 16, QFont.Weight.Bold))
         title_label.setStyleSheet("color: #4CD7F6;")
 

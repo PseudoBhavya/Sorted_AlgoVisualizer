@@ -1,12 +1,12 @@
-# 🧠 AlgoLens — "Look Inside the Algorithm"
+# 🧠 Sorted — "Look Inside the Algorithm"
 
 <p align="center">
-  <img src="brain.png" alt="AlgoLens Logo" width="96" height="96" />
+  <img src="brain.png" alt="Sorted Logo" width="96" height="96" />
 </p>
 
 <p align="center">
   <strong>Advanced Interactive Algorithm Execution, Visualization, and Empirical Analysis Platform</strong><br>
-  <em>AlgoVision IDE v3.12 • End-Semester Capstone Project • BCA Advanced Python Curriculum</em>
+  <em>Sorted IDE v3.12 • End-Semester Capstone Project • BCA Advanced Python Curriculum</em>
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@
 
 ## 🌟 Overview
 
-**AlgoLens** is an interactive computer science workbench engineered to demystify complex data structures and algorithmic mechanics. Unlike traditional visualizers that replay canned animations or static CSS transitions, AlgoLens is powered by a **Pure Python Execution Trace Engine** that records every genuine runtime computational event:
+**Sorted** is an interactive computer science workbench engineered to demystify complex data structures and algorithmic mechanics. Unlike traditional visualizers that replay canned animations or static CSS transitions, Sorted is powered by a **Pure Python Execution Trace Engine** that records every genuine runtime computational event:
 - Pointer movements ($i, j, \text{low}, \text{mid}, \text{high}$)
 - Active element comparisons and condition checks
 - In-memory swaps and array mutations with visual curved arcs
@@ -30,7 +30,7 @@
 - Graph edge relaxations and heuristic cost recalculations ($g(n), h(n), f(n)$)
 - Recursive call stack frames and boundary scopes
 
-Designed in an obsidian-slate developer dark mode inspired by modern IDEs, AlgoLens pairs visual intuition with synchronized Python source code tracking, variable watches, and real-time auditory synthesis.
+Designed in an obsidian-slate developer dark mode inspired by modern IDEs, Sorted pairs visual intuition with synchronized Python source code tracking, variable watches, and real-time auditory synthesis.
 
 ---
 
@@ -83,7 +83,7 @@ The primary workspace implements an ergonomic, data-dense IDE layout designed fo
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│  🧠 AlgoLens IDE  │  Sorting ▾  │  Searching ▾  │  Graph ▾  │  DP ▾  │ Arena │
+│  🧠 Sorted IDE    │  Sorting ▾  │  Searching ▾  │  Graph ▾  │  DP ▾  │ Arena │
 ├──────────────────────────────────────┬───────────────────────────────────────┤
 │                                      │                                       │
 │  [LEFT COLUMN: SIMULATION & CONFIG]  │  [RIGHT COLUMN: CODE & EXECUTION]     │
@@ -111,9 +111,9 @@ The primary workspace implements an ergonomic, data-dense IDE layout designed fo
 
 ## 🏛 Syllabus Mapping (BCA Advanced Python)
 
-AlgoLens was architected to fulfill and exceed the requirements of the four-unit BCA curriculum:
+Sorted was architected to fulfill and exceed the requirements of the four-unit BCA curriculum:
 
-| Unit | Subject Matter | Implementation in AlgoLens |
+| Unit | Subject Matter | Implementation in Sorted |
 | :--- | :--- | :--- |
 | **Unit 1** | **Advanced Object-Oriented Programming** | Abstract Base Classes (`abc.ABC`, `@abstractmethod`), class inheritance hierarchies, polymorphic dispatch, custom exception hierarchies (`AlgorithmError`, `InvalidInputError`, `EmptyDataError`). |
 | **Unit 2** | **Algorithms & Computational Mechanics** | 11 algorithms across 4 paradigms with pure AST/event-driven `ExecutionTrace` capturing all state mutations, recursive call stack frames, and boundary checks. |
@@ -176,8 +176,8 @@ Clone the repository and install the dependencies in a Python 3.10+ virtual envi
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/algolens.git
-cd algolens
+git clone https://github.com/PseudoBhavya/AlgoVision---Algorithm-Visualizer.git
+cd AlgoVision---Algorithm-Visualizer
 
 # Create and activate virtual environment
 python3 -m venv .venv
@@ -229,7 +229,7 @@ Executes all 16 test cases covering algorithm sorting correctness, edge cases (e
 
 ## 🧪 Benchmark & Comparison Arena
 
-AlgoLens includes an empirical analysis engine powered by **Pandas**:
+Sorted includes an empirical analysis engine powered by **Pandas**:
 - **Operation Counting**: Accurately tallies comparisons, swaps, assignments, and recursive depth without timing overhead distortion.
 - **Statistical Aggregation**: Computes mean, median, min, max, and standard deviation across multiple trial runs.
 - **Speedup Ratios**: Automatically computes normalized speedups against baseline $\mathcal{O}(n^2)$ Bubble Sort.

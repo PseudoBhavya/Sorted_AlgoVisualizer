@@ -1,6 +1,6 @@
 """
-AlgoLens — Look Inside the Algorithm
-====================================
+Sorted — Look Inside the Algorithm
+==================================
 Advanced Python Algorithm Execution, Visualization, and Analysis Engine.
 """
 

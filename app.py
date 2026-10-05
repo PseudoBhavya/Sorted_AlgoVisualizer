@@ -1,7 +1,7 @@
 """
-AlgoLens — Look Inside the Algorithm
-====================================
-Streamlit Web Launcher serving the exact AlgoVision Stitch IDE design system.
+Sorted — Look Inside the Algorithm
+==================================
+Streamlit Web Launcher serving the exact Sorted IDE design system.
 Provides pixel-perfect fidelity with zero formatting glitches and 60fps simulation.
 """
 
@@ -18,7 +18,7 @@ if os.path.exists(favicon_path):
 
 # Configure full-screen layout with brain.png favicon
 st.set_page_config(
-    page_title="AlgoVision — AlgoLens IDE v3.12",
+    page_title="Sorted — Algorithm Visualizer IDE v3.12",
     page_icon=favicon_path if os.path.exists(favicon_path) else "🧠",
     layout="wide",
     initial_sidebar_state="collapsed"
