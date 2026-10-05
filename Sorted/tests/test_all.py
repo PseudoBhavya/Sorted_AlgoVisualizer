@@ -15,17 +15,30 @@ import unittest
 import tempfile
 import pandas as pd
 
-from algolens.algorithms.registry import AlgorithmRegistry
-from algolens.algorithms.sorting import (
-    BubbleSort, SelectionSort, InsertionSort,
-    MergeSort, QuickSort, HeapSort
-)
-from algolens.algorithms.searching import LinearSearch, BinarySearch
-from algolens.validation.validators import InputValidator, ValidationError
-from algolens.data.handlers import DataFileHandler
-from algolens.data.datasets import DatasetGenerator
-from algolens.analytics.pandas_analysis import PerformanceAnalytics
-from algolens.api.app import create_app
+try:
+    from Sorted.algorithms.registry import AlgorithmRegistry
+    from Sorted.algorithms.sorting import (
+        BubbleSort, SelectionSort, InsertionSort,
+        MergeSort, QuickSort, HeapSort
+    )
+    from Sorted.algorithms.searching import LinearSearch, BinarySearch
+    from Sorted.validation.validators import InputValidator, ValidationError
+    from Sorted.data.handlers import DataFileHandler
+    from Sorted.data.datasets import DatasetGenerator
+    from Sorted.analytics.pandas_analysis import PerformanceAnalytics
+    from Sorted.api.app import create_app
+except ImportError:
+    from algolens.algorithms.registry import AlgorithmRegistry
+    from algolens.algorithms.sorting import (
+        BubbleSort, SelectionSort, InsertionSort,
+        MergeSort, QuickSort, HeapSort
+    )
+    from algolens.algorithms.searching import LinearSearch, BinarySearch
+    from algolens.validation.validators import InputValidator, ValidationError
+    from algolens.data.handlers import DataFileHandler
+    from algolens.data.datasets import DatasetGenerator
+    from algolens.analytics.pandas_analysis import PerformanceAnalytics
+    from algolens.api.app import create_app
 
 
 class TestAlgorithms(unittest.TestCase):

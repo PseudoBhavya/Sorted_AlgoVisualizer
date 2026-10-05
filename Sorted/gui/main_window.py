@@ -14,10 +14,16 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor
 
-from algolens.algorithms.registry import AlgorithmRegistry
-from algolens.algorithms.steps import ExecutionTrace, AlgorithmStep
-from algolens.validation.validators import InputValidator
-from algolens.data.datasets import DatasetGenerator
+try:
+    from Sorted.algorithms.registry import AlgorithmRegistry
+    from Sorted.algorithms.steps import ExecutionTrace, AlgorithmStep
+    from Sorted.validation.validators import InputValidator
+    from Sorted.data.datasets import DatasetGenerator
+except ImportError:
+    from algolens.algorithms.registry import AlgorithmRegistry
+    from algolens.algorithms.steps import ExecutionTrace, AlgorithmStep
+    from algolens.validation.validators import InputValidator
+    from algolens.data.datasets import DatasetGenerator
 from .widgets import ArrayCanvas
 
 

@@ -7,8 +7,10 @@ Adheres to the Stitch color palette and dark aesthetic.
 
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QPainter, QColor, QFont, QPen, QBrush, QPainterPath
-from PyQt6.QtCore import Qt, QRectF
-from algolens.algorithms.steps import AlgorithmStep
+try:
+    from Sorted.algorithms.steps import AlgorithmStep
+except ImportError:
+    from algolens.algorithms.steps import AlgorithmStep
 
 
 class ArrayCanvas(QWidget):

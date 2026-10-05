@@ -6,11 +6,18 @@ comparisons, and dataset management.
 """
 
 from flask import Blueprint, request, jsonify
-from algolens.algorithms.registry import AlgorithmRegistry
-from algolens.algorithms.base import AlgorithmError
-from algolens.validation.validators import InputValidator, ValidationError
-from algolens.data.datasets import DatasetGenerator
-from algolens.analytics.pandas_analysis import PerformanceAnalytics
+try:
+    from Sorted.algorithms.registry import AlgorithmRegistry
+    from Sorted.algorithms.base import AlgorithmError
+    from Sorted.validation.validators import InputValidator, ValidationError
+    from Sorted.data.datasets import DatasetGenerator
+    from Sorted.analytics.pandas_analysis import PerformanceAnalytics
+except ImportError:
+    from algolens.algorithms.registry import AlgorithmRegistry
+    from algolens.algorithms.base import AlgorithmError
+    from algolens.validation.validators import InputValidator, ValidationError
+    from algolens.data.datasets import DatasetGenerator
+    from algolens.analytics.pandas_analysis import PerformanceAnalytics
 from .schemas import serialize_trace
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')

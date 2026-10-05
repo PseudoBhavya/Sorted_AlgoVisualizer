@@ -6,7 +6,10 @@ and execution metrics matching the Stitch design.
 """
 
 from typing import Dict, Any
-from algolens.algorithms.steps import AlgorithmStep
+try:
+    from Sorted.algorithms.steps import AlgorithmStep
+except ImportError:
+    from algolens.algorithms.steps import AlgorithmStep
 
 
 class StateRenderer:

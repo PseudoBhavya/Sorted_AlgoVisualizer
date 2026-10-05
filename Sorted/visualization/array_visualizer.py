@@ -14,7 +14,10 @@ Includes:
 """
 
 from typing import Optional, List
-from algolens.algorithms.steps import AlgorithmStep
+try:
+    from Sorted.algorithms.steps import AlgorithmStep
+except ImportError:
+    from algolens.algorithms.steps import AlgorithmStep
 
 
 class ArrayVisualizer:

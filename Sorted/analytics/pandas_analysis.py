@@ -1,6 +1,6 @@
 """
-AlgoLens Pandas Analytics Engine
-================================
+Sorted Pandas Analytics Engine
+==============================
 Statistical analysis, aggregation, and empirical benchmarking using Pandas.
 Covers Syllabus Unit 4 on Pandas DataFrames, Series, Groupby, Aggregations, and Pivots.
 """
@@ -10,8 +10,12 @@ from typing import List, Dict, Any, Optional
 import pandas as pd
 import numpy as np
 
-from algolens.algorithms.registry import AlgorithmRegistry
-from algolens.data.datasets import DatasetGenerator
+try:
+    from Sorted.algorithms.registry import AlgorithmRegistry
+    from Sorted.data.datasets import DatasetGenerator
+except ImportError:
+    from algolens.algorithms.registry import AlgorithmRegistry
+    from algolens.data.datasets import DatasetGenerator
 
 
 class PerformanceAnalytics:

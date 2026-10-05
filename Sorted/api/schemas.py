@@ -6,8 +6,10 @@ into JSON-compliant dictionaries for the REST API.
 """
 
 from typing import Dict, Any
-from dataclasses import asdict
-from algolens.algorithms.steps import ExecutionTrace, AlgorithmStep
+try:
+    from Sorted.algorithms.steps import ExecutionTrace, AlgorithmStep
+except ImportError:
+    from algolens.algorithms.steps import ExecutionTrace, AlgorithmStep
 
 
 def serialize_step(step: AlgorithmStep) -> Dict[str, Any]:

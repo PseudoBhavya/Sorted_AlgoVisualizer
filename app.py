@@ -69,7 +69,9 @@ iframe {
 """, unsafe_allow_html=True)
 
 # Load the exact unified Stitch HTML application
-static_html_path = os.path.join(os.path.dirname(__file__), "algolens", "static", "index.html")
+static_html_path = os.path.join(os.path.dirname(__file__), "Sorted", "static", "index.html")
+if not os.path.exists(static_html_path):
+    static_html_path = os.path.join(os.path.dirname(__file__), "algolens", "static", "index.html")
 
 if os.path.exists(static_html_path):
     with open(static_html_path, "r", encoding="utf-8") as f:

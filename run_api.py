@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Sorted Flask REST API Server Launcher"""
-from algolens.api.app import create_app
+import os
+import sys
+
+# Ensure project root is in sys.path even when reloaded by watchdog
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from Sorted.api.app import create_app
 
 app = create_app()
 

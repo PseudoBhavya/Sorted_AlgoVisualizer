@@ -20,7 +20,10 @@ import xml.etree.ElementTree as ET
 from typing import Union, List, Dict, Any, Optional
 import pandas as pd
 
-from algolens.validation.validators import InputValidator, ValidationError
+try:
+    from Sorted.validation.validators import InputValidator, ValidationError
+except ImportError:
+    from algolens.validation.validators import InputValidator, ValidationError
 
 
 class FileHandlerError(Exception):
