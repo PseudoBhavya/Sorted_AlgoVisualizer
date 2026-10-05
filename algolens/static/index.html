@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AlgoVision — Algorithm Visualizer</title>
+<link rel="icon" type="image/png" href="brain.png">
+<link rel="shortcut icon" type="image/png" href="brain.png">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{bg:'#0c1322',s0:'#070e1d',s1:'#141b2b',s2:'#191f2f',s3:'#232a3a',s4:'#2e3545',fg:'#dce2f7',mut:'#bcc9cd',ol:'#869397',olv:'#3d494c',pri:'#4cd7f6',pc:'#06b6d4',onpc:'#00424f',ter:'#ffb95f',err:'#ffb4ab',errc:'#93000a',sec:'#c0c1ff',ok:'#10B981'},fontFamily:{sans:['Geist','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
+<style>
+html, body { margin: 0 !important; padding: 0 !important; overflow-x: hidden; }
+body { font-variant-numeric: tabular-nums; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #070e1d; }
+::-webkit-scrollbar-thumb { background: #232a3a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3d494c; }
+.ms { font-family:'Material Symbols Outlined'; font-size:18px; line-height:1; font-weight:400; font-style:normal; display:inline-block; vertical-align:middle; }
+input[type=range] { accent-color:#06b6d4; width:100%; }
+.b { transition: height .2s cubic-bezier(0.4, 0, 0.2, 1); }
+</style>
+</head>
+<body class="bg-bg text-fg font-sans antialiased text-[13px]">
+<header class="fixed top-0 inset-x-0 z-50 bg-s0/95 backdrop-blur border-b border-s3/40 m-0 p-0">
+<div class="h-16 px-4 flex items-center justify-between gap-3">
+<button type="button" onclick="navTo('visualize', event)" class="flex items-center gap-2 shrink-0 cursor-pointer bg-transparent border-0 p-0 text-left">
+  <svg width="28" height="28" viewBox="0 0 28 28">
+    <rect x="3" y="14" width="5" height="11" fill="#4cd7f6"/>
+    <rect x="11" y="6" width="5" height="19" fill="#06b6d4"/>
+    <rect x="19" y="10" width="5" height="15" fill="#ffb95f"/>
+  </svg>
+  <span class="text-lg font-medium tracking-tight">AlgoVision</span>
+  <span class="px-1.5 rounded bg-s3 text-pri text-[10px] font-mono uppercase font-bold">IDE v3.12</span>
+</button>
+<nav id="nav" class="flex gap-1.5 overflow-x-auto text-xs font-mono"></nav>
+<div class="hidden lg:flex items-center gap-2 bg-s1 px-3 py-1.5 rounded-lg text-[11px] font-mono shrink-0">
+  <span class="w-2 h-2 rounded-full bg-pc animate-pulse"></span>
+  <span class="text-mut">Flask API / Ready</span>
+  <span class="text-olv">|</span>
+  <span class="text-pri">Py 3.12</span>
+  <span class="text-olv">|</span>
+  <span id="ms" class="text-ter">0 steps</span>
+</div>
+</div>
+<div id="crumb" class="h-10 px-4 bg-s1 flex items-center gap-2 text-xs font-mono overflow-x-auto whitespace-nowrap border-b border-s3/30"></div>
+</header>
+<main id="app" class="pt-[104px] w-full min-h-screen"></main>
+
+<script>
+const $ = s => document.querySelector(s), rnd = n => Math.floor(Math.random() * n);
+
+const NAV = [
+  ['visualize', 'Visualize', 'play_circle'],
+  ['algorithms', 'Algorithms', 'account_tree'],
+  ['compare', 'Compare', 'splitscreen'],
+  ['history', 'History', 'history'],
+  ['datasets', 'Datasets', 'data_array'],
+  ['about', 'About', 'terminal']
+];
+
+const META = {
+  quick: { n:'Quick Sort', cat:'Sorting', f:'Divide & Conquer', tg:['In-Place','Unstable'], d:'Partition-exchange sort: picks a pivot, partitions around it (Hoare dual-pointer or Lomuto single-pointer), then recurses on both slices.', avg:'O(n log n)', w:'O(n²)', sp:'O(log n)' },
+  merge: { n:'Merge Sort', cat:'Sorting', f:'Divide & Conquer', tg:['Stable','Out-of-Place'], d:'Recursively halves the array, then merges sorted halves through an auxiliary buffer.', avg:'O(n log n)', w:'O(n log n)', sp:'O(n)' },
+  heap: { n:'Heap Sort', cat:'Sorting', f:'Selection', tg:['In-Place','Unstable'], d:'Builds a max-heap, then repeatedly moves the maximum element to the end and sifts down.', avg:'O(n log n)', w:'O(n log n)', sp:'O(1)' },
+  bubble: { n:'Bubble Sort', cat:'Sorting', f:'Exchange', tg:['In-Place','Stable'], d:'Repeatedly swaps adjacent out-of-order elements until the array is fully sorted.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
+  insertion: { n:'Insertion Sort', cat:'Sorting', f:'Insertion', tg:['In-Place','Stable'], d:'Grows a sorted prefix by inserting each element into its correct position.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
+  selection: { n:'Selection Sort', cat:'Sorting', f:'Selection', tg:['In-Place','Unstable'], d:'Repeatedly selects the minimum of the unsorted part and swaps it to the front.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
+  binary: { n:'Binary Search', cat:'Searching', f:'Divide & Conquer', t:'search', tg:['Searching','Sorted input'], d:'Logarithmic interval halving with lo/mid/hi pointers over a sorted array.', avg:'O(log n)', w:'O(log n)', sp:'O(1)', lg:[['Mid','text-pri'],['Found','text-ter'],['Out of range','text-ol']] },
+  linear: { n:'Linear Search', cat:'Searching', f:'Sequential', t:'search', tg:['Searching','Simple'], d:'Sequentially inspects every item in the list until target match is found.', avg:'O(n)', w:'O(n)', sp:'O(1)' },
+  dijkstra: { n:"Dijkstra's Shortest Path", cat:'Graph Theory', f:'Greedy', t:'graph', tg:['Graph Theory','Optimal'], d:'Single-source shortest paths on non-negative weighted graphs via greedy edge relaxation.', avg:'O(V²)', w:'O(V²)', sp:'O(V)', lg:[['Current','text-ter'],['Visited','text-pri'],['Relaxed edge','text-err'],['Shortest path','text-ok']] },
+  astar: { n:'A* Pathfinding', cat:'Heuristic Search', f:'Heuristic Search', t:'grid', tg:['Spatial Grid','Informed'], d:'Informed search expanding the lowest f(n)=g(n)+h(n) grid cell using Manhattan distance heuristic.', avg:'O(b^d)', w:'O(b^d)', sp:'O(b^d)', lg:[['Current','text-ter'],['Open set','text-pri'],['Closed set','text-sec'],['Path','text-ok']] },
+  knap: { n:'0/1 Knapsack', cat:'Dynamic Programming', f:'Dynamic Prog.', t:'dp', tg:['Combinatorial','Optimization'], d:'Optimal value under a capacity limit by tabulating overlapping subproblems and backtracking.', avg:'O(n·W)', w:'O(n·W)', sp:'O(n·W)', lg:[['Current cell','text-ter'],['Dependencies','text-pri'],['Chosen path','text-ok']] }
+};
+
+const TY = k => META[k].t || 'sort';
+
+const CODE = {
+  quick: [
+    'def quicksort(a, lo, hi):',
+    '    pivot = a[lo]',
+    '    i = lo - 1; j = hi + 1',
+    '    while True:',
+    '        i += 1  # scan right while a[i] < pivot',
+    '        while a[i] < pivot: i += 1',
+    '        j -= 1  # scan left while a[j] > pivot',
+    '        while a[j] > pivot: j -= 1',
+    '        if i >= j: return j',
+    '        a[i], a[j] = a[j], a[i]  # SWAP',
+    '    quicksort(a, lo, j)',
+    '    quicksort(a, j+1, hi)'
+  ],
+  merge: [
+    'def merge_sort(a, lo, hi):',
+    '    if lo >= hi: return',
+    '    mid = (lo + hi) // 2',
+    '    merge_sort(a, lo, mid)',
+    '    merge_sort(a, mid+1, hi)',
+    '    L = a[lo:mid+1]; R = a[mid+1:hi+1]',
+    '    while L and R:',
+    '        a[k] = L.pop(0) if L[0] <= R[0] else R.pop(0)',
+    '    a[k:] = L + R  # copy leftovers'
+  ],
+  heap: [
+    'def heap_sort(a):',
+    '    # Build max-heap',
+    '    for i in range(len(a)//2 - 1, -1, -1):',
+    '        sift_down(a, i, len(a))',
+    '    # Extract max elements',
+    '    for end in range(len(a)-1, 0, -1):',
+    '        a[0], a[end] = a[end], a[0]  # SWAP',
+    '        sift_down(a, 0, end)'
+  ],
+  bubble: [
+    'def bubble_sort(a):',
+    '    n = len(a)',
+    '    for i in range(n - 1):',
+    '        for j in range(n - 1 - i):',
+    '            if a[j] > a[j+1]:',
+    '                a[j], a[j+1] = a[j+1], a[j]  # SWAP'
+  ],
+  insertion: [
+    'def insertion_sort(a):',
+    '    for i in range(1, len(a)):',
+    '        j = i - 1',
+    '        while j >= 0 and a[j] > a[j+1]:',
+    '            a[j], a[j+1] = a[j+1], a[j]  # SHIFT',
+    '            j -= 1'
+  ],
+  selection: [
+    'def selection_sort(a):',
+    '    for i in range(len(a) - 1):',
+    '        m = i  # scan for minimum',
+    '        for j in range(i + 1, len(a)):',
+    '            if a[j] < a[m]: m = j',
+    '        if m != i: a[i], a[m] = a[m], a[i]  # SWAP'
+  ],
+  binary: [
+    'def binary_search(a, target):',
+    '    lo, hi = 0, len(a) - 1',
+    '    while lo <= hi:',
+    '        mid = (lo + hi) // 2',
+    '        if a[mid] == target: return mid',
+    '        elif a[mid] < target: lo = mid + 1',
+    '        else: hi = mid - 1',
+    '    return -1'
+  ],
+  linear: [
+    'def linear_search(a, target):',
+    '    for i in range(len(a)):',
+    '        if a[i] == target:',
+    '            return i',
+    '    return -1'
+  ],
+  dijkstra: [
+    'def dijkstra(G, src):',
+    '    dist = {v: inf for v in G}; dist[src] = 0',
+    '    while unvisited:',
+    '        u = min(unvisited, key=lambda v: dist[v])',
+    '        mark u visited',
+    '        for v, w in G[u]:',
+    '            if dist[u] + w < dist[v]:  # RELAX',
+    '                dist[v] = dist[u] + w; prev[v] = u'
+  ],
+  astar: [
+    'def a_star(grid, start, goal):',
+    '    open_set = {start}; g[start] = 0',
+    '    while open_set:',
+    '        cur = min(open_set, key=lambda c: g[c] + h(c))',
+    '        if cur == goal: return reconstruct_path(cur)',
+    '        closed_set.add(cur)',
+    '        for nb in neighbors(cur):',
+    '            if g[cur] + 1 < g[nb]:',
+    '                g[nb] = g[cur] + 1; open_set.add(nb)'
+  ],
+  knap: [
+    'def knapsack(weights, values, W):',
+    '    dp = [[0]*(W+1) for _ in range(n+1)]',
+    '    for i in range(1, n+1):',
+    '        for w in range(W+1):',
+    '            dp[i][w] = dp[i-1][w]  # skip item',
+    '            if weights[i-1] <= w:  # take item',
+    '                dp[i][w] = max(dp[i][w], dp[i-1][w-weights[i-1]] + values[i-1])',
+    '    return dp[n][W]  # backtrack optimal items'
+  ]
+};
+
+// ---- Graph & Grid constants ----
+const GN = [['S',40,150],['A',160,45],['B',160,255],['C',300,45],['D',300,255],['E',440,100],['T',520,200]];
+const GE = [[0,1],[0,2],[1,2],[1,3],[2,4],[3,4],[3,5],[4,5],[4,6],[5,6]];
+const GW = 14, GH = 8;
+
+// ---- engine: records atomic execution snapshots ----
+let S = [], C = 0, W = 0, ST = 'hoare', TGT = 44;
+let TR = [], STK = [];
+const enter = (lo, hi) => { STK.push(TR.push({ p: STK.at(-1) ?? -1, lo, hi, d: STK.length }) - 1); };
+const leave = () => STK.pop();
+const R = (a, o = {}) => S.push({ a: a.slice(), c: C, w: W, stk: STK.slice(), tn: TR.length, ...o });
+const sw = (a, i, j) => { [a[i], a[j]] = [a[j], a[i]]; W++; };
+
+const ALG = {
+  quick(a, lo = 0, hi = a.length - 1) {
+    if (lo >= hi) return;
+    enter(lo, hi);
+    let p, i, j;
+    if (ST == 'hoare') {
+      p = a[lo]; i = lo - 1; j = hi + 1;
+      R(a, { piv: lo, rng: [lo, hi], l: 1, m: `Pivot ${p} chosen at index ${lo} for range [${lo}..${hi}].` });
+      for (;;) {
+        do { i++; C++; R(a, { piv: lo, rng: [lo, hi], cmp: [i], pi: i, pj: j, l: 3, m: `Left pointer i=${i}: a[i]=${a[i]} ${a[i] < p ? '<' : '≥'} pivot ${p}.` }); } while (a[i] < p);
+        do { j--; C++; R(a, { piv: lo, rng: [lo, hi], cmp: [j], pi: i, pj: j, l: 4, m: `Right pointer j=${j}: a[j]=${a[j]} ${a[j] > p ? '>' : '≤'} pivot ${p}.` }); } while (a[j] > p);
+        if (i >= j) {
+          R(a, { rng: [lo, hi], pi: i, pj: j, l: 5, m: `Pointers crossed (i=${i} ≥ j=${j}); partition complete. Recurse on [${lo}..${j}] and [${j+1}..${hi}].` });
+          break;
+        }
+        sw(a, i, j);
+        R(a, { piv: lo, rng: [lo, hi], swp: [i, j], pi: i, pj: j, l: 6, m: `a[${i}]=${a[i]} and a[${j}]=${a[j]} swapped to restore Hoare invariant.` });
+      }
+      ALG.quick(a, lo, j);
+      ALG.quick(a, j + 1, hi);
+    } else {
+      p = a[hi]; i = lo - 1;
+      R(a, { piv: hi, rng: [lo, hi], l: 1, m: `Lomuto partition: pivot ${p} selected at index ${hi}.` });
+      for (j = lo; j < hi; j++) {
+        C++;
+        R(a, { piv: hi, rng: [lo, hi], cmp: [j], pi: i, pj: j, l: 3, m: `Compare a[${j}]=${a[j]} with pivot ${p}.` });
+        if (a[j] < p) {
+          i++; sw(a, i, j);
+          R(a, { piv: hi, rng: [lo, hi], swp: [i, j], pi: i, pj: j, l: 6, m: `a[${j}] < pivot: swap into left partition index ${i}.` });
+        }
+      }
+      sw(a, i + 1, hi);
+      R(a, { rng: [lo, hi], swp: [i + 1, hi], l: 6, m: `Pivot placed at final sorted index ${i + 1}.` });
+      ALG.quick(a, lo, i);
+      ALG.quick(a, i + 2, hi);
+    }
+    leave();
+  },
+
+  merge(a, lo = 0, hi = a.length - 1) {
+    if (lo >= hi) return;
+    enter(lo, hi);
+    const m = (lo + hi) >> 1;
+    ALG.merge(a, lo, m);
+    ALG.merge(a, m + 1, hi);
+    const L = a.slice(lo, m + 1), Q = a.slice(m + 1, hi + 1);
+    let i = 0, j = 0, k = lo;
+    const wr = v => {
+      a[k] = v; W++;
+      R(a, { rng: [lo, hi], swp: [k], l: 5, m: `Write ${v} to a[${k}] while merging [${lo}..${m}] and [${m+1}..${hi}].` });
+      k++;
+    };
+    while (i < L.length && j < Q.length) {
+      C++; wr(L[i] <= Q[j] ? L[i++] : Q[j++]);
+    }
+    while (i < L.length) wr(L[i++]);
+    while (j < Q.length) wr(Q[j++]);
+    leave();
+  },
+
+  heap(a) {
+    const n = a.length;
+    const sift = (i, e) => {
+      for (;;) {
+        let l = 2 * i + 1, r = l + 1, m = i;
+        if (l < e) { C++; if (a[l] > a[m]) m = l; }
+        if (r < e) { C++; if (a[r] > a[m]) m = r; }
+        R(a, { cmp: [i, l, r].filter(x => x < e), l: 5, m: `Sift-down node ${i}: compare with children.` });
+        if (m == i) return;
+        sw(a, i, m);
+        R(a, { swp: [i, m], l: 6, m: `Swap parent ${i} with larger child ${m}.` });
+        i = m;
+      }
+    };
+    for (let i = (n >> 1) - 1; i >= 0; i--) sift(i, n);
+    for (let e = n - 1; e > 0; e--) {
+      sw(a, 0, e);
+      R(a, { swp: [0, e], l: 3, m: `Move max root ${a[e]} to sorted position ${e}.` });
+      sift(0, e);
+    }
+  },
+
+  bubble(a) {
+    for (let i = 0; i < a.length - 1; i++) {
+      for (let j = 0; j < a.length - 1 - i; j++) {
+        C++;
+        R(a, { cmp: [j, j + 1], l: 3, m: `Compare adjacent a[${j}]=${a[j]} and a[${j+1}]=${a[j+1]}.` });
+        if (a[j] > a[j + 1]) {
+          sw(a, j, j + 1);
+          R(a, { swp: [j, j + 1], l: 4, m: `Inversion found: swap a[${j}] and a[${j+1}].` });
+        }
+      }
+    }
+  },
+
+  insertion(a) {
+    for (let i = 1; i < a.length; i++) {
+      for (let j = i - 1; j >= 0; j--) {
+        C++;
+        R(a, { cmp: [j, j + 1], l: 3, m: `Compare key a[${j+1}]=${a[j+1]} with sorted prefix a[${j}]=${a[j]}.` });
+        if (a[j] > a[j + 1]) {
+          sw(a, j, j + 1);
+          R(a, { swp: [j, j + 1], l: 4, m: `Shift larger element right into index ${j+1}.` });
+        } else break;
+      }
+    }
+  },
+
+  selection(a) {
+    for (let i = 0; i < a.length - 1; i++) {
+      let m = i;
+      for (let j = i + 1; j < a.length; j++) {
+        C++;
+        R(a, { cmp: [j, m], piv: m, l: 2, m: `Scan minimum: a[${j}]=${a[j]} vs current min a[${m}]=${a[m]}.` });
+        if (a[j] < a[m]) m = j;
+      }
+      if (m != i) {
+        sw(a, i, m);
+        R(a, { swp: [i, m], l: 3, m: `Swap selected minimum ${a[i]} into sorted position ${i}.` });
+      }
+    }
+  },
+
+  binary(a) {
+    a.sort((x, y) => x - y);
+    const t = V.tg;
+    let lo = 0, hi = a.length - 1, f = -1;
+    const sn = o => R(a, { rng: [lo, hi], h: `Binary Search target = ${t}`, vars: [['target', t, 'text-ter'], ['lo', lo, 'text-pri'], ['hi', hi, 'text-pri'], ['mid', o.mid ?? '—', 'text-err'], ['Comparisons', C, 'text-fg'], ['Status', f >= 0 ? 'FOUND' : 'SEARCHING', f >= 0 ? 'text-ok' : 'text-pri']], ...o });
+    sn({ l: 1, m: `Sorted array loaded. Binary searching for target ${t}.` });
+    while (lo <= hi) {
+      const m = (lo + hi) >> 1;
+      C++;
+      const tg = { [lo]: 'lo', [hi]: 'hi', [m]: ((lo == m ? 'lo ' : '') + 'mid') };
+      sn({ l: 3, cmp: [m], tg, mid: m, m: `mid=${m}: a[mid]=${a[m]} ${a[m] == t ? '==' : a[m] < t ? '<' : '>'} target ${t}.` });
+      if (a[m] == t) { f = m; break; }
+      a[m] < t ? (lo = m + 1) : (hi = m - 1);
+    }
+    R(a, { rng: f < 0 ? [0, -1] : [f, f], piv: f < 0 ? null : f, h: `Target ${t}`, vars: [['target', t, 'text-ter'], ['result', f < 0 ? 'NOT FOUND' : 'INDEX ' + f, f < 0 ? 'text-err' : 'text-ok'], ['Comparisons', C, 'text-fg'], ['N', a.length, 'text-pri'], ['lo', lo, 'text-ol'], ['hi', hi, 'text-ol']], l: f < 0 ? 7 : 4, m: f < 0 ? `Target ${t} does not exist in array.` : `Target ${t} located at index ${f}!` });
+  },
+
+  linear(a) {
+    const t = V.tg;
+    let f = -1;
+    for (let i = 0; i < a.length; i++) {
+      C++;
+      R(a, { cmp: [i], pi: i, l: 2, m: `Check a[${i}]=${a[i]} == target ${t}?` });
+      if (a[i] == t) { f = i; break; }
+    }
+    R(a, { piv: f < 0 ? null : f, l: f < 0 ? 4 : 3, vars: [['target', t, 'text-ter'], ['result', f < 0 ? 'NOT FOUND' : 'INDEX ' + f, f < 0 ? 'text-err' : 'text-ok'], ['Comparisons', C, 'text-fg'], ['N', a.length, 'text-pri'], ['last_idx', f >= 0 ? f : a.length - 1, 'text-ol'], ['status', f >= 0 ? 'FOUND' : 'EXHAUSTED', f >= 0 ? 'text-ok' : 'text-err']], m: f < 0 ? `Target ${t} not found in linear scan.` : `Target ${t} found at index ${f}!` });
+  },
+
+  dijkstra() {
+    const n = 7, d = Array(n).fill(1/0), vis = Array(n).fill(0), pr = Array(n).fill(-1);
+    d[0] = 0;
+    const adj = u => GE.map((e, k) => e[0] == u ? [e[1], V.gw[k], k] : e[1] == u ? [e[0], V.gw[k], k] : 0).filter(Boolean);
+    const sn = o => R([], { ty: 'g', d: d.slice(), vis: vis.slice(), h: 'Dijkstra Shortest Path: S → T', vars: [['visited', vis.filter(x => x).length + '/' + n, 'text-ok'], ['dist[T]', d[6] == 1/0 ? '∞' : d[6], 'text-ter'], ['current', o.u == null ? '—' : GN[o.u][0], 'text-pri'], ['relaxations', W, 'text-err'], ['Comparisons', C, 'text-fg'], ['Nodes', n, 'text-mut']], ...o });
+    sn({ l: 1, m: 'Initialize all vertex distances to ∞; source vertex S distance = 0.' });
+    for (let r = 0; r < n; r++) {
+      let u = -1;
+      for (let i = 0; i < n; i++) if (!vis[i] && d[i] < 1/0 && (u < 0 || d[i] < d[u])) u = i;
+      if (u < 0) break;
+      vis[u] = 1;
+      sn({ u, l: 3, m: `Extract-Min: select unvisited vertex ${GN[u][0]} with tentative distance ${d[u]}.` });
+      for (const [v, w, k] of adj(u)) {
+        if (vis[v]) continue;
+        C++;
+        const nd = d[u] + w, ok = nd < d[v];
+        if (ok) { d[v] = nd; pr[v] = u; W++; }
+        sn({ u, k, rel: ok, l: 6, m: `Edge ${GN[u][0]}→${GN[v][0]} (w=${w}): ${d[u]}+${w}=${nd} ${ok ? 'improves shortest distance — relaxed!' : 'does not improve (' + d[v] + ') — skipped.'}` });
+      }
+    }
+    const p = [];
+    for (let x = 6; x >= 0 && d[6] < 1/0; x = pr[x]) p.push(x);
+    sn({ path: p, l: 0, m: d[6] < 1/0 ? `Shortest path S → T finalized! Total distance = ${d[6]}.` : 'Target vertex T is unreachable.' });
+  },
+
+  astar() {
+    const n = GW * GH, wl = V.walls, g = Array(n).fill(1/0), pr = Array(n).fill(-1), op = [0], cl = [], G = n - 1;
+    const h = i => Math.abs(i % GW - G % GW) + Math.abs((i / GW | 0) - (G / GW | 0));
+    g[0] = 0;
+    const sn = o => R([], { ty: 'm', op: op.slice(), cl: cl.slice(), h: 'A* Heuristic Pathfinding (14×8 Grid)', vars: [['open set', op.length, 'text-pri'], ['closed set', cl.length, 'text-sec'], ['g(cur)', o.u == null ? '—' : g[o.u], 'text-ter'], ['h(cur)', o.u == null ? '—' : h(o.u), 'text-err'], ['Evaluations', C, 'text-fg'], ['Goal', `(${GW-1},${GH-1})`, 'text-ok']], ...o });
+    sn({ l: 1, m: 'Start cell S(0,0) initialized with g=0 and added to open set.' });
+    while (op.length) {
+      let b = 0;
+      op.forEach((x, i) => { if (g[x] + h(x) < g[op[b]] + h(op[b])) b = i; });
+      const u = op.splice(b, 1)[0];
+      cl.push(u); C++;
+      sn({ u, l: 3, m: `Expand cell (${u % GW}, ${u / GW | 0}) with lowest f(n) = g+h = ${g[u]}+${h(u)} = ${g[u] + h(u)}.` });
+      if (u == G) {
+        const p = [];
+        for (let x = G; x >= 0; x = pr[x]) p.push(x);
+        sn({ u, path: p, l: 4, m: `Goal cell T reached! Optimal path constructed with length ${p.length - 1}.` });
+        return;
+      }
+      for (const [dx, dy] of [[1,0], [-1,0], [0,1], [0,-1]]) {
+        const x = u % GW + dx, y = (u / GW | 0) + dy, v = y * GW + x;
+        if (x < 0 || y < 0 || x >= GW || y >= GH || wl[v] || cl.includes(v)) continue;
+        if (g[u] + 1 < g[v]) {
+          g[v] = g[u] + 1; pr[v] = u; W++;
+          if (!op.includes(v)) op.push(v);
+        }
+      }
+      sn({ u, l: 7, m: `Neighbors evaluated. Open set size: ${op.length}.` });
+    }
+    sn({ l: 0, m: 'Open set exhausted: no valid unobstructed path exists to Goal.' });
+  },
+
+  knap() {
+    const it = V.items, n = it.length, cp = V.cap;
+    const T = Array.from({ length: n + 1 }, () => Array(cp + 1).fill(0));
+    const sn = o => R([], { ty: 'd', T: T.map(r => r.slice()), h: `0/1 Knapsack (Capacity W=${cp}, ${n} Items)`, vars: [['item i', o.i ?? '—', 'text-ter'], ['capacity w', o.w ?? '—', 'text-pri'], ['dp[i][w]', o.i ? T[o.i][o.w] : '—', 'text-ok'], ['cells tabulated', C, 'text-err'], ['Items Total', n, 'text-mut'], ['Max Cap', cp, 'text-fg']], ...o });
+    sn({ l: 1, m: 'Base cases: 2D DP matrix initialized to 0 for 0 items and 0 capacity.' });
+    for (let i = 1; i <= n; i++) {
+      for (let w = 0; w <= cp; w++) {
+        C++;
+        const [wt, v] = it[i - 1], tk = wt <= w, dep = [[i - 1, w]];
+        T[i][w] = T[i - 1][w];
+        if (tk) {
+          dep.push([i - 1, w - wt]);
+          T[i][w] = Math.max(T[i][w], T[i - 1][w - wt] + v);
+        }
+        sn({ i, w, dep, l: tk ? 6 : 4, m: tk ? `Item ${i} (weight=${wt}, val=${v}) fits! max(skip=${T[i-1][w]}, take=${T[i-1][w-wt]}+${v}) = ${T[i][w]}.` : `Item ${i} (weight=${wt}) exceeds capacity w=${w}; inherit dp[${i-1}][${w}] = ${T[i][w]}.` });
+      }
+    }
+    let w = cp;
+    const ch = [], cells = [];
+    for (let i = n; i > 0; i--) {
+      cells.push([i, w]);
+      if (T[i][w] != T[i - 1][w]) {
+        ch.unshift(i);
+        w -= it[i - 1][0];
+      }
+    }
+    cells.push([0, w]);
+    sn({ cells, l: 7, m: `Backtracking complete: include items {${ch.join(', ') || 'none'}} for optimal maximum value = ${T[n][cp]}.` });
+  }
+};
+
+function gen(al, arr) {
+  S = []; TR = []; STK = []; C = W = 0;
+  const a = (arr || []).slice(), t = META[al].t;
+  if (!t) R(a, { l: 0, m: 'Initial array buffer loaded.' });
+  ALG[al](a);
+  if (!t) R(a, { sd: 1, l: 0, m: 'Array fully sorted ✔ Invariant verified.' });
+  S.T = TR;
+  return S;
+}
+
+const mkG = () => GE.map(() => 1 + rnd(9));
+const mkI = () => Array.from({ length: 5 }, () => [1 + rnd(6), 1 + rnd(9)]);
+const mkW = () => {
+  for (let t = 0; t < 40; t++) {
+    V.walls = Array.from({ length: GW * GH }, (_, i) => i && i < GW * GH - 1 && Math.random() < 0.28);
+    if (gen('astar').at(-1).path) return;
+  }
+  V.walls = Array(GW * GH).fill(false);
+};
+
+// ---- Audio cues (Web Audio API) ----
+const AU = { on: false, ctx: null };
+const pitch = s => {
+  const i = (s.swp || s.cmp || [0])[0];
+  const v = s.a && s.a[i];
+  return v != null ? 200 + v * 8 : 320 + (V.i * 37) % 500;
+};
+function beep(f) {
+  if (!AU.on) return;
+  try {
+    AU.ctx = AU.ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AU.ctx.createOscillator(), g = AU.ctx.createGain();
+    o.type = 'triangle';
+    o.frequency.value = f;
+    g.gain.value = 0.05;
+    o.connect(g);
+    g.connect(AU.ctx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, AU.ctx.currentTime + 0.12);
+    o.stop(AU.ctx.currentTime + 0.13);
+  } catch (e) {}
+}
+
+const q = t => '"' + String(t).replace(/"/g, '""') + '"';
+const dl = (n, t, m) => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([t], { type: m }));
+  a.download = n;
+  a.click();
+};
+
+const mk = (k, n) => {
+  let a = Array.from({ length: n }, () => 1 + rnd(99));
+  if (k == 'nearly') {
+    a.sort((x, y) => x - y);
+    for (let t = 0; t < Math.max(1, n / 10 | 0); t++) sw(a, rnd(n), rnd(n));
+  }
+  if (k == 'rev') a.sort((x, y) => y - x);
+  if (k == 'few') a = a.map(() => [10, 30, 50, 70][rnd(4)]);
+  return a;
+};
+const parse = t => (t.match(/\d+/g) || []).map(Number).slice(0, 60);
+
+// ---- Global application state ----
+const V = {
+  algo: 'quick',
+  arr: [45, 12, 78, 23, 9, 34, 67, 18],
+  sp: 1,
+  i: 0,
+  S: [],
+  lg: 0,
+  tg: 23,
+  view: 'bars',
+  gw: [4, 2, 1, 5, 7, 3, 6, 2, 3, 4],
+  items: [[2, 3], [3, 4], [4, 5], [5, 6]],
+  cap: 9,
+  walls: []
+};
+const CP = { a: 'quick', b: 'merge', arr: mk('rand', 20), i: 0, SA: [], SB: [], sp: 1 };
+const DS = { k: 'rand', n: 16, arr: mk('rand', 16) };
+let P = false, T = null, RT = 'visualize', FIL = 'All', HIST = [];
+try { HIST = JSON.parse(localStorage.av || '[]'); } catch (e) {}
+
+const ldV = () => {
+  if (TY(V.algo) == 'grid' && !V.walls.length) mkW();
+  V.S = gen(V.algo, V.arr);
+  V.i = 0;
+  V.lg = 0;
+};
+const ldC = () => {
+  CP.SA = gen(CP.a, CP.arr);
+  CP.SB = gen(CP.b, CP.arr);
+  CP.i = 0;
+};
+const stop = () => { clearInterval(T); P = false; };
+const start = () => {
+  clearInterval(T);
+  P = true;
+  T = setInterval(tick, 700 / (RT == 'compare' ? CP.sp : V.sp));
+};
+
+function tick() {
+  if (RT == 'visualize') {
+    if (V.i < V.S.length - 1) {
+      V.i++;
+      beep(pitch(V.S[V.i]));
+    } else {
+      stop();
+      logRun();
+    }
+    paintV();
+  } else if (RT == 'compare') {
+    const mx = Math.max(CP.SA.length, CP.SB.length) - 1;
+    if (CP.i < mx) CP.i++;
+    else stop();
+    paintC();
+  }
+}
+
+function logRun() {
+  if (V.lg) return;
+  V.lg = 1;
+  const s = V.S.at(-1);
+  HIST.unshift({ t: new Date().toLocaleTimeString(), al: META[V.algo].n, n: V.arr.length, st: V.S.length - 1, c: s.c, w: s.w });
+  HIST = HIST.slice(0, 50);
+  try { localStorage.av = JSON.stringify(HIST); } catch (e) {}
+}
+
+function navTo(tab, e) {
+  if (e) {
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+  }
+  if (tab && views[tab]) RT = tab;
+  try {
+    if (window.location && window.location.hash !== undefined) {
+      window.location.hash = '#' + tab;
+    }
+  } catch (err) {}
+  route(tab);
+}
+
+// ---- visualizers & renderers ----
+const cc = (s, i) => s.sd ? 'bg-ok text-s0' : s.swp && s.swp.includes(i) ? 'bg-err text-s0' : s.piv === i ? 'bg-ter text-s0' : s.cmp && s.cmp.includes(i) ? 'bg-pri text-s0' : s.rng && (i < s.rng[0] || i > s.rng[1]) ? 'bg-s3 text-ol opacity-50' : 'bg-s4 text-mut';
+
+function bars(s, h = 'h-64') {
+  const a = s.a, mx = Math.max(...a, 1), n = a.length;
+  return `<div class="flex items-end gap-1 ${h} px-1">${a.map((v, i) => {
+    let c = 'bg-s4 text-mut', tag = '';
+    if (s.rng && (i < s.rng[0] || i > s.rng[1])) c = 'bg-s3 text-ol opacity-40';
+    if (s.sd) c = 'bg-ok text-s0 font-bold';
+    if (s.piv === i) { c = 'bg-ter text-s0 font-bold'; tag = 'P'; }
+    if (s.cmp && s.cmp.includes(i)) { c = 'bg-pri text-s0 font-bold'; tag = '■'; }
+    if (s.swp && s.swp.includes(i)) { c = 'bg-err text-s0 font-bold'; tag = '⇄'; }
+    if (i === s.pi) tag += (tag ? ' ' : '') + 'i';
+    if (i === s.pj) tag += (tag ? ' ' : '') + 'j';
+    if (s.tg && s.tg[i]) tag += (tag ? ' ' : '') + s.tg[i];
+    return `<div class="flex-1 flex flex-col items-center justify-end h-full gap-1 min-w-0">
+      <span class="text-[10px] font-mono text-ter h-4 whitespace-nowrap">${tag}</span>
+      <div class="b w-full rounded-t ${c} flex justify-center pt-1 text-[11px] font-mono font-semibold overflow-hidden shadow-sm" style="height:${(v / mx) * 82}%">${n <= 26 ? v : ''}</div>
+      <span class="text-[9px] font-mono text-ol">[${n <= 30 ? i : ''}]</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+const matrix = s => {
+  const c = Math.ceil(Math.sqrt(s.a.length));
+  return `<div class="grid gap-1.5 p-2 bg-s1 rounded-xl h-64 overflow-y-auto" style="grid-template-columns:repeat(${c},1fr)">
+    ${s.a.map((v, i) => `
+      <div class="${cc(s, i)} rounded p-2 text-center font-mono flex flex-col justify-between">
+        <div class="text-[9px] opacity-70">[${i / c | 0},${i % c}]</div>
+        <div class="text-base font-bold">${v}</div>
+      </div>`).join('')}
+  </div>`;
+};
+
+const mem = s => `
+  <div class="h-64 overflow-y-auto font-mono text-xs p-2 bg-s1 rounded-xl flex flex-col gap-1">
+    ${s.a.map((v, i) => `
+      <div class="flex items-center gap-3 px-3 py-1 rounded ${cc(s, i)}">
+        <span class="w-28 opacity-75 font-mono">0x${(0x7ffe0000 + i * 4).toString(16)}</span>
+        <span class="w-12 font-mono text-mut">[${i}]</span>
+        <span class="w-12 font-bold font-mono">${v}</span>
+        <span class="opacity-75 font-mono text-[11px]">${v.toString(2).padStart(8, '0')}</span>
+      </div>`).join('')}
+  </div>`;
+
+const graphSvg = s => {
+  const P = s.path || [], pe = new Set(P.slice(1).map((v, i) => [P[i], v].sort().join()));
+  return `<svg viewBox="0 0 560 300" class="w-full h-64 bg-s1 rounded-xl p-2">
+    ${GE.map(([a, b], k) => {
+      const A = GN[a], B = GN[b];
+      const c = pe.has([a, b].sort().join()) ? '#10B981' : s.k === k ? (s.rel ? '#ffb4ab' : '#4cd7f6') : '#3d494c';
+      return `<line x1="${A[1]}" y1="${A[2]}" x2="${B[1]}" y2="${B[2]}" stroke="${c}" stroke-width="${pe.has([a, b].sort().join()) ? 4 : 2.5}"/>
+      <text x="${(A[1] + B[1]) / 2}" y="${(A[2] + B[2]) / 2 - 6}" fill="#bcc9cd" font-size="11" text-anchor="middle" font-family="JetBrains Mono">${V.gw[k]}</text>`;
+    }).join('')}
+    ${GN.map((n, i) => {
+      const c = P.includes(i) ? '#10B981' : s.u === i ? '#ffb95f' : s.vis && s.vis[i] ? '#06b6d4' : '#869397';
+      return `<circle cx="${n[1]}" cy="${n[2]}" r="18" fill="#141b2b" stroke="${c}" stroke-width="3"/>
+      <text x="${n[1]}" y="${n[2] + 4}" fill="#dce2f7" font-size="13" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">${n[0]}</text>
+      <text x="${n[1]}" y="${n[2] + 34}" fill="#4cd7f6" font-size="10" text-anchor="middle" font-family="JetBrains Mono">${s.d && s.d[i] < 1/0 ? s.d[i] : '∞'}</text>`;
+    }).join('')}
+  </svg>`;
+};
+
+const gridV = s => `
+  <div class="grid gap-1 p-2 bg-s1 rounded-xl h-64 overflow-y-auto" style="grid-template-columns:repeat(${GW},1fr)">
+    ${V.walls.map((w, i) => {
+      const c = w ? 'bg-olv' : (s.path || []).includes(i) ? 'bg-ok text-s0 font-bold' : s.u === i ? 'bg-ter text-s0 font-bold' : (s.cl || []).includes(i) ? 'bg-sec/40 text-fg' : (s.op || []).includes(i) ? 'bg-pc/60 text-s0 font-bold' : 'bg-s2 text-ol';
+      return `<div class="${c} aspect-square rounded flex items-center justify-center text-[10px] font-mono">${i == 0 ? 'S' : i == GW * GH - 1 ? 'T' : ''}</div>`;
+    }).join('')}
+  </div>`;
+
+const dpV = s => {
+  const it = V.items, cp = V.cap;
+  const fd = (i, w) => i == 0 || s.i == null || i < s.i || (i == s.i && w <= s.w);
+  const is = (a, i, w) => (a || []).some(x => x[0] == i && x[1] == w);
+  return `<div class="h-64 overflow-auto bg-s1 rounded-xl p-2 border border-s3/40">
+    <table class="font-mono text-xs w-full text-center">
+      <thead>
+        <tr>
+          <th class="p-1.5 text-ol font-medium">i \\ w</th>
+          ${Array.from({ length: cp + 1 }, (_, w) => `<th class="p-1.5 text-ol">${w}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${s.T.map((r, i) => `
+          <tr class="border-t border-s3/30">
+            <td class="p-1.5 text-left text-ol whitespace-nowrap font-medium">${i ? `Item ${i} (${it[i-1][0]}:${it[i-1][1]})` : '—'}</td>
+            ${r.map((v, w) => `<td class="p-1.5 ${s.i == i && s.w == w ? 'bg-ter text-s0 font-bold' : is(s.cells, i, w) ? 'bg-ok text-s0 font-bold' : is(s.dep, i, w) ? 'bg-pc/30 text-pri font-bold' : 'text-mut'}">${fd(i, w) ? v : ''}</td>`).join('')}
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+};
+
+const body = s => {
+  if (s.ty == 'g') return graphSvg(s);
+  if (s.ty == 'm') return gridV(s);
+  if (s.ty == 'd') return dpV(s);
+  if (V.view == 'matrix') return matrix(s);
+  if (V.view == 'mem') return mem(s);
+  return bars(s, 'h-64');
+};
+
+const tabs = () => {
+  if (!['sort', 'search'].includes(TY(V.algo))) return '';
+  return `<div class="flex items-center gap-1.5 pb-2 mb-2 border-b border-s3/40">
+    ${[
+      ['bars', 'bar_chart', 'Bars & Pointers'],
+      ['matrix', 'grid_4x4', 'Matrix View'],
+      ['mem', 'memory', 'Memory Cells']
+    ].map(([k, i, t]) => `
+      <button data-a="view" data-v="${k}" class="px-2.5 py-1 rounded-lg font-mono text-xs flex items-center gap-1.5 transition-colors ${V.view == k ? 'bg-pc text-onpc font-semibold shadow-sm' : 'bg-s1 text-mut hover:text-fg'}">
+        <span class="ms text-[16px]">${i}</span><span>${t}</span>
+      </button>`).join('')}
+  </div>`;
+};
+
+const btn = 'px-3 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer ';
+const pri = btn + 'bg-pc text-onpc font-semibold hover:brightness-110 shadow-md';
+const sec = btn + 'bg-s3 text-fg hover:bg-s4';
+const seg = on => btn + (on ? 'bg-pc text-onpc font-medium shadow-sm' : 'text-mut hover:text-fg');
+const lab = t => `<label class="text-[10px] font-mono uppercase tracking-wider text-ol">${t}</label>`;
+const opts = (sel, c) => Object.entries(META).filter(([k, m]) => !c || !m.t).map(([k, m]) => `<option value="${k}" ${k == sel ? 'selected' : ''}>${m.n}</option>`).join('');
+
+// ---- views ----
+const views = {
+  visualize() {
+    return `<div class="p-4 max-w-[1750px] mx-auto flex flex-col gap-4">
+    <!-- Main 2-Column Grid: Left (Graph + Config) vs Right (Code Tracker + Execution State) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+
+      <!-- LEFT COLUMN: Graph / Simulation + Configuration -->
+      <div class="flex flex-col gap-3.5">
+        <!-- 1. Graph / Simulation Stage -->
+        <div class="rounded-xl bg-s0 p-4 border border-s3 shadow-sm flex flex-col gap-3">
+          <div class="flex items-center justify-between border-b border-s3/40 pb-2">
+            <span class="text-xs font-mono uppercase tracking-wider text-fg font-semibold flex items-center gap-1.5">
+              <span class="ms text-pri text-[18px]">bar_chart</span>
+              Graph / Algorithm Simulation
+            </span>
+            <div id="strat"></div>
+          </div>
+          <div id="stage"></div>
+          <div id="recTree" class="rounded-lg bg-s1 p-3 text-xs font-mono border border-s3/50"></div>
+        </div>
+
+        <!-- 2. Configuration Card -->
+        <div class="rounded-xl bg-s0 p-4 border border-s3 shadow-sm flex flex-col gap-3">
+          <div class="flex items-center justify-between border-b border-s3/40 pb-2">
+            <div class="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-fg font-semibold">
+              <span class="ms text-pri text-[18px]">tune</span>
+              Configuration & Inputs
+            </div>
+            <!-- Audio cues toggle -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono text-mut flex items-center gap-1"><span class="ms text-ter text-[16px]">graphic_eq</span>Audio Cues</span>
+              <button data-a="audio" id="au" class="w-9 h-5 rounded-full p-0.5 flex cursor-pointer transition-colors ${AU.on ? 'bg-ter justify-end' : 'bg-s4'}">
+                <span class="w-4 h-4 rounded-full bg-fg block"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="flex flex-col gap-1.5">
+              ${lab('Target Algorithm')}
+              <select id="vAlgo" class="bg-s1 text-pri text-sm px-3 py-2 rounded-lg font-medium cursor-pointer w-full border border-s3 focus:outline-none focus:border-pc">${opts(V.algo)}</select>
+            </div>
+            <div id="cfgDynamic" class="flex flex-col gap-1.5"></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-s3/40">
+            <div id="cfgSlider"></div>
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                ${lab('Clock Speed')}
+                <span id="sv" class="font-mono text-ter text-xs font-bold">${V.sp}x</span>
+              </div>
+              <input id="vSp" type="range" min="0.25" max="8" step="0.25" value="${V.sp}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Python Source Tracker + Execution State -->
+      <div class="flex flex-col gap-3.5">
+        <!-- 1. Python Source Tracker (Prominent at top of right column) -->
+        <div id="code" class="rounded-xl bg-s0 p-4 border border-s3 shadow-sm flex flex-col"></div>
+
+        <!-- 2. Execution State -->
+        <div id="state" class="rounded-xl bg-s0 p-4 border border-s3 shadow-sm"></div>
+
+        <!-- 3. Why this step? -->
+        <div id="why" class="h-[104px] min-h-[104px] max-h-[104px] shrink-0 rounded-xl bg-s1 border border-s3 p-3.5 flex flex-col box-border overflow-hidden shadow-sm"></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM BAR: Play/Pause and controlling the Simulator -->
+    <div id="bar" class="rounded-xl bg-s0 p-4 border border-s3 shadow-md flex flex-col gap-3"></div>
+    </div>`;
+  },
+
+  algorithms() {
+    const L = Object.entries(META).filter(([k, m]) => FIL == 'All' || m.f == FIL || m.cat == FIL || m.tg.includes(FIL));
+    const q = ($('#q') || {}).value || '';
+    return `<div class="p-5 max-w-6xl mx-auto flex flex-col gap-4">
+    <div>
+      <div class="text-[10px] font-mono uppercase text-ol">Computational Registry // Standard Lib v3.12</div>
+      <h1 class="text-3xl font-semibold tracking-tight">Algorithm Library & Execution Catalog</h1>
+      <p class="text-mut">Inspect asymptotic complexities, invariants, and launch any algorithm directly into the interactive workspace.</p>
+    </div>
+    <div class="flex flex-wrap gap-2 items-center">
+      <div class="flex items-center gap-2 bg-s1 rounded-lg px-3 py-2 flex-1 min-w-[240px]">
+        <span class="ms text-ol">search</span>
+        <input id="q" value="${q}" placeholder="Filter by name, complexity, or paradigm (e.g. quick, O(n log n), Dijkstra, knapsack)…" class="bg-transparent w-full font-mono text-xs focus:outline-none">
+      </div>
+      ${['All', 'Sorting', 'Searching', 'Graph Theory', 'Heuristic Search', 'Dynamic Programming', 'Divide & Conquer', 'In-Place', 'Stable'].map(f => `<button data-a="fil" data-v="${f}" class="${seg(f == FIL)}">${f}</button>`).join('')}
+    </div>
+    <div class="grid md:grid-cols-2 gap-3.5">
+      ${L.filter(([k, m]) => (m.n + m.avg + m.w + m.f + m.cat + m.tg.join(' ')).toLowerCase().includes(q.toLowerCase())).map(([k, m]) => `
+        <div class="bg-s1 rounded-xl p-4 flex flex-col justify-between gap-3 border border-s3 hover:border-pc/40 transition-colors">
+          <div class="flex flex-col gap-2">
+            <div class="flex gap-1 flex-wrap">
+              <span class="px-2 py-0.5 rounded bg-s3 text-ter text-[10px] font-mono font-medium">${m.cat}</span>
+              <span class="px-2 py-0.5 rounded bg-s3 text-pri text-[10px] font-mono">${m.f}</span>
+              ${m.tg.map(t => `<span class="px-2 py-0.5 rounded bg-s2 text-ol text-[10px] font-mono">${t}</span>`).join('')}
+            </div>
+            <h2 class="text-2xl font-semibold tracking-tight">${m.n}</h2>
+            <p class="text-mut leading-relaxed text-xs">${m.d}</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2 font-mono text-xs pt-1">
+            <div class="bg-s0 rounded p-2 border border-s3/40"><div class="text-[10px] text-ol">Avg Time</div><div class="text-pri font-bold">${m.avg}</div></div>
+            <div class="bg-s0 rounded p-2 border border-s3/40"><div class="text-[10px] text-ol">Worst Time</div><div class="text-ter font-bold">${m.w}</div></div>
+            <div class="bg-s0 rounded p-2 border border-s3/40"><div class="text-[10px] text-ol">Space</div><div class="text-fg font-bold">${m.sp}</div></div>
+          </div>
+          <div class="flex gap-2 justify-end pt-2 border-t border-s3/40">
+            ${m.t ? '' : `<button data-a="cmpAdd" data-v="${k}" class="${sec}">Add to Compare</button>`}
+            <button data-a="launch" data-v="${k}" class="${pri}">Launch Visualizer →</button>
+          </div>
+        </div>`).join('') || '<div class="text-ol py-8 text-center col-span-2">No algorithms matched your filter criteria.</div>'}
+    </div>
+    </div>`;
+  },
+
+  compare() {
+    return `<div class="p-4 max-w-6xl mx-auto flex flex-col gap-4">
+    <div class="bg-s1 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 border border-s3">
+      <div class="flex items-center gap-2">
+        <span class="ms text-pri text-[22px]">splitscreen</span>
+        <span class="font-mono text-sm font-semibold">Benchmark Arena (N=${CP.arr.length})</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        ${[['rand', 'Uniform Random'], ['nearly', 'Nearly Sorted'], ['rev', 'Reversed'], ['few', 'High Duplication']].map(([k, t]) => `
+          <button data-a="cpre" data-v="${k}" class="${sec} text-xs">${t}</button>`).join('')}
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="cA" class="bg-s3 rounded-lg px-2.5 py-1.5 font-mono text-xs border border-s4">${opts(CP.a, 1)}</select>
+        <span class="text-ol font-mono text-xs">VS</span>
+        <select id="cB" class="bg-s3 rounded-lg px-2.5 py-1.5 font-mono text-xs border border-s4">${opts(CP.b, 1)}</select>
+      </div>
+      <div class="flex items-center gap-2">
+        <button data-a="creset" class="${sec} flex items-center gap-1"><span class="ms text-[16px]">restart_alt</span>Reset</button>
+        <button data-a="cstep" class="${sec} flex items-center gap-1"><span class="ms text-[16px]">skip_next</span>Step</button>
+        <button data-a="cplay" id="cpl" class="${pri}"></button>
+      </div>
+    </div>
+    <div class="grid lg:grid-cols-2 gap-4">
+      <div id="pA"></div>
+      <div id="pB"></div>
+    </div>
+    <div id="delta"></div>
+    </div>`;
+  },
+
+  history() {
+    return `<div class="p-5 max-w-5xl mx-auto flex flex-col gap-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-semibold tracking-tight">Trace & Session Logs</h1>
+        <p class="text-mut text-xs">Execution history saved locally across browser sessions.</p>
+      </div>
+      <div class="flex gap-2">
+        <button data-a="hexp" class="${sec} flex items-center gap-1"><span class="ms text-[16px]">download</span>Export CSV</button>
+        <button data-a="clear" class="${btn} border border-errc text-err flex items-center gap-1 hover:bg-err/10"><span class="ms text-[16px]">delete</span>Clear History</button>
+      </div>
+    </div>
+    <div class="bg-s1 rounded-xl overflow-x-auto border border-s3">
+      <table class="w-full font-mono text-xs">
+        <tr class="text-ol text-left bg-s0/60">${['Timestamp', 'Algorithm', 'Array Size', 'Steps', 'Comparisons', 'Swaps / Writes', ''].map(h => `<th class="p-3">${h}</th>`).join('')}</tr>
+        ${HIST.map((h, i) => `
+          <tr class="border-t border-s3/40 hover:bg-s2/30">
+            <td class="p-3 text-mut">${h.t}</td>
+            <td class="p-3 text-pri font-bold">${h.al}</td>
+            <td class="p-3">${h.n}</td>
+            <td class="p-3">${h.st}</td>
+            <td class="p-3 text-fg font-bold">${h.c}</td>
+            <td class="p-3 text-ter font-bold">${h.w}</td>
+            <td class="p-3"><button data-a="hdel" data-v="${i}" class="text-ol hover:text-err">✕</button></td>
+          </tr>`).join('') || '<tr><td colspan="7" class="p-6 text-center text-ol">No execution logs recorded yet. Run any algorithm simulation to the end to log metrics here.</td></tr>'}
+      </table>
+    </div>
+    </div>`;
+  },
+
+  datasets() {
+    return `<div class="p-5 max-w-5xl mx-auto flex flex-col gap-4">
+    <div>
+      <h1 class="text-3xl font-semibold tracking-tight">Dataset Synthesizer</h1>
+      <p class="text-mut">Generate pathological, adversarial, or uniform datasets and inject them directly into the visualizer or arena.</p>
+    </div>
+    <div class="bg-s1 rounded-xl p-5 flex flex-col gap-4 border border-s3">
+      <div class="flex flex-wrap gap-2">
+        ${[['rand', 'Uniform Random'], ['nearly', 'Nearly Sorted (90%)'], ['rev', 'Reversed (Worst Case O(n²))'], ['few', 'High Duplication (Few Unique)']].map(([k, t]) => `
+          <button data-a="dsk" data-v="${k}" class="${seg(DS.k == k)}">${t}</button>`).join('')}
+      </div>
+      <div class="flex items-center gap-3">
+        ${lab('Array Size')}
+        <input id="dN" type="range" min="4" max="40" value="${DS.n}" class="!w-48">
+        <span id="dnv" class="font-mono text-pri font-bold text-sm">${DS.n}</span>
+      </div>
+      <div id="dprev" class="bg-s0 rounded-xl p-4 border border-s3"></div>
+      <div id="dtxt" class="font-mono text-xs text-mut break-all bg-s0 p-3 rounded-lg border border-s3/40"></div>
+      <div class="flex gap-2 justify-end">
+        <button data-a="dlexport" data-v="csv" class="${sec}">Export CSV</button>
+        <button data-a="dlexport" data-v="json" class="${sec}">Export JSON</button>
+        <button data-a="dsC" class="${sec}">Use in Compare</button>
+        <button data-a="dsV" class="${pri}">Load in Visualizer →</button>
+      </div>
+    </div>
+    </div>`;
+  },
+
+  about() {
+    return `<div class="p-5 max-w-4xl mx-auto flex flex-col gap-4">
+    <h1 class="text-3xl font-semibold tracking-tight">AlgoVision Engine Documentation</h1>
+    <div class="bg-s1 rounded-xl p-5 flex flex-col gap-4 border border-s3 text-mut text-xs leading-relaxed">
+      <p class="text-fg text-sm">
+        <b>AlgoVision</b> is a deterministic algorithm state tracing platform. It captures immutable snapshots of memory registers, array pointers, recursion stack frames, and operational invariants at every single discrete step.
+      </p>
+      <div>
+        <div class="text-fg font-medium text-sm mb-1">Keyboard Shortcuts</div>
+        <div class="font-mono grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div class="p-2 bg-s0 rounded border border-s3"><b class="text-pri">Space</b> Play / Pause</div>
+          <div class="p-2 bg-s0 rounded border border-s3"><b class="text-pri">→</b> Step Forward</div>
+          <div class="p-2 bg-s0 rounded border border-s3"><b class="text-pri">←</b> Step Backward</div>
+          <div class="p-2 bg-s0 rounded border border-s3"><b class="text-pri">R</b> Reset State</div>
+        </div>
+      </div>
+      <div>
+        <div class="text-fg font-medium text-sm mb-1">Color Palette & Invariant Tags</div>
+        <div class="flex flex-wrap gap-4 font-mono">
+          <span class="text-ter">■ Pivot / Minimum / Current</span>
+          <span class="text-pri">■ Comparison / Open Set</span>
+          <span class="text-err">■ Write / Swap / Shift</span>
+          <span class="text-ok">■ Sorted / Final Path</span>
+          <span class="text-sec">■ Closed Set</span>
+        </div>
+      </div>
+    </div>
+    </div>`;
+  }
+};
+
+// ---- painters ----
+function paintV() {
+  const s = V.S[V.i], m = META[V.algo], n = V.S.length - 1, pct = (V.i / n * 100).toFixed(1), done = V.i == n;
+  const rg = s.rng ? `arr[${s.rng[0]}..${s.rng[1]}]` : 'arr[0..' + (V.arr.length - 1) + ']';
+
+  // 1. Stage (Left Top)
+  $('#stage').innerHTML = `
+    ${tabs()}
+    <div class="flex justify-between items-center text-xs font-mono pb-2">
+      <span class="text-pri">${s.h || 'Active Range: <span class="bg-s3 px-2 py-0.5 rounded text-fg font-bold">' + rg + '</span>'}</span>
+      <span class="text-ter font-bold">${s.piv != null ? (m.cat === 'Searching' ? 'Target = ' + TGT : 'Pivot Val = ' + s.a[s.piv]) : ''}</span>
+    </div>
+    ${body(s)}
+    <div class="flex flex-wrap items-center gap-4 text-[11px] font-mono bg-s2 rounded-lg px-3 py-1.5 mt-2">
+      ${(m.lg || [['Pivot/Min', 'text-ter'], ['Compare', 'text-pri'], ['Swap/Write', 'text-err'], ['Sorted', 'text-ok']]).map(([a, c]) => `<span class="${c}">■ ${a}</span>`).join('')}
+      <span class="ml-auto text-pri font-semibold">Step ${V.i}: ${s.m.split('.')[0]}</span>
+    </div>`;
+
+  // Recursion Tree / Call stack frame
+  const TN = V.S.T || [], nd = TN.slice(0, s.tn || 0), stk = s.stk || [], ac = stk.at(-1), nm = V.algo == 'quick' ? 'quicksort' : 'merge_sort';
+  $('#recTree').innerHTML = `
+    <div class="flex justify-between items-center pb-1 text-ol text-[11px] uppercase">
+      <span>Call Stack & Invariant State</span>
+      <span class="text-pri font-bold">${V.algo == 'quick' ? (ST == 'hoare' ? 'Hoare Dual-Pointer' : 'Lomuto Single-Pointer') : V.algo}</span>
+    </div>` + (['quick', 'merge'].includes(V.algo) ? `
+    <div class="grid md:grid-cols-3 gap-2 mt-1">
+      <div class="md:col-span-2 bg-s0 rounded-lg p-2 flex flex-col gap-1.5 max-h-40 overflow-y-auto border border-s3/40">
+        ${[...new Set(nd.map(x => x.d))].sort((a, b) => a - b).map(d => `
+          <div class="flex flex-wrap justify-center gap-1">
+            ${nd.map((x, id) => ({ x, id })).filter(o => o.x.d == d).map(({ x, id }) => `
+              <span class="px-1.5 py-0.5 rounded font-mono text-[10px] ${id == ac ? 'bg-pc text-onpc font-bold' : stk.includes(id) ? 'bg-sec/20 text-sec' : 'bg-s2 text-ol'}">${nm}(${x.lo},${x.hi})</span>`).join('')}
+          </div>`).join('')}
+      </div>
+      <div class="bg-s0 rounded-lg p-2 font-mono text-[11px] flex flex-col gap-1 border border-s3/40">
+        <span class="text-[10px] text-ol uppercase font-semibold">Active Frame Stack</span>
+        ${[...stk].reverse().map((id, k, a) => `
+          <div class="px-1.5 py-0.5 rounded ${k ? 'bg-s2 text-ol' : 'bg-pc/20 text-pri font-medium'}">#${a.length - k}: ${nm}(${TN[id].lo}, ${TN[id].hi})</div>`).join('')}
+        <div class="px-1.5 py-0.5 rounded bg-s2 text-ol/70">#0: main()</div>
+      </div>
+    </div>` : `
+    <div class="bg-s0 p-2.5 rounded-lg border border-s3/40 flex items-center justify-between text-xs mt-1">
+      <span class="text-fg font-semibold">${V.algo}(state=${s.ty || 'iterative'})</span>
+      <span class="px-2 py-0.5 rounded bg-s2 text-pri text-[11px] font-bold uppercase">${done ? 'COMPLETE' : 'ACTIVE INVARIANT'}</span>
+    </div>`);
+
+  // Configuration Dynamic Section
+  const t = TY(V.algo);
+  const cfgDyn = $('#cfgDynamic'), cfgSld = $('#cfgSlider');
+  if (cfgDyn && cfgSld) {
+    if (t == 'graph') {
+      cfgDyn.innerHTML = `${lab('Graph Dataset')}<div class="text-mut text-xs mt-1">7-Node weighted DAG from S to T.</div><button data-a="pre" data-v="rand" class="${sec} mt-1 py-1.5 text-xs">Randomize Weights</button>`;
+      cfgSld.innerHTML = `<div class="flex justify-between items-center mb-1">${lab('Nodes Count')}<span class="font-mono text-pri text-xs font-bold">7</span></div><input type="range" disabled min="7" max="7" value="7" class="opacity-50">`;
+    } else if (t == 'grid') {
+      cfgDyn.innerHTML = `${lab('Grid Maze')}<div class="text-mut text-xs mt-1">14×8 Obstacle Matrix S(0,0) → T(13,7).</div><button data-a="pre" data-v="rand" class="${sec} mt-1 py-1.5 text-xs">Generate New Maze</button>`;
+      cfgSld.innerHTML = `<div class="flex justify-between items-center mb-1">${lab('Grid Dimensions')}<span class="font-mono text-pri text-xs font-bold">14 × 8</span></div><input type="range" disabled min="1" max="1" value="1" class="opacity-50">`;
+    } else if (t == 'dp') {
+      cfgDyn.innerHTML = `
+        ${lab('Items (wt : val)')}
+        <div class="flex gap-1.5 mt-0.5">
+          <input id="vIn" class="bg-s1 rounded-lg px-2.5 py-1.5 font-mono text-xs flex-1 border border-s3" value="${V.items.map(x => x.join(':')).join(', ')}">
+          <button data-a="apply" class="${sec} py-1 text-xs">Apply</button>
+        </div>
+        <button data-a="pre" data-v="rand" class="${sec} mt-1 py-1 text-xs">Random Items</button>`;
+      cfgSld.innerHTML = `
+        <div class="flex justify-between items-center mb-1">${lab('Knapsack Capacity W')}<span id="nv" class="font-mono text-pri text-xs font-bold">${V.cap}</span></div>
+        <input id="vN" type="range" min="5" max="20" value="${V.cap}">`;
+    } else {
+      cfgDyn.innerHTML = `
+        ${lab('Active Array Buffer')}
+        <div class="flex gap-1.5 mt-0.5">
+          <input id="vIn" class="bg-s1 rounded-lg px-2.5 py-1.5 font-mono text-xs flex-1 border border-s3" value="[${V.arr}]">
+          <button data-a="apply" class="${sec} py-1 text-xs">Apply</button>
+        </div>
+        ${t == 'search' ? `<div class="flex items-center gap-2 mt-1">${lab('Target')}<input id="vT" type="number" class="bg-s1 rounded px-2 py-0.5 font-mono text-xs w-20 border border-s3" value="${V.tg}"></div>` : ''}
+        <div class="flex gap-1 mt-1">
+          <button data-a="pre" data-v="rand" class="${sec} flex-1 py-1 text-[11px]">Random</button>
+          <button data-a="pre" data-v="nearly" class="${sec} flex-1 py-1 text-[11px]">Nearly</button>
+          <button data-a="pre" data-v="rev" class="${sec} flex-1 py-1 text-[11px]">Reversed</button>
+          <button data-a="pre" data-v="few" class="${sec} flex-1 py-1 text-[11px]">Few</button>
+        </div>`;
+      cfgSld.innerHTML = `
+        <div class="flex justify-between items-center mb-1">${lab('Array Size (N)')}<span id="nv" class="font-mono text-pri text-xs font-bold">${V.arr.length}</span></div>
+        <input id="vN" type="range" min="4" max="40" value="${V.arr.length}">`;
+    }
+  }
+
+  // 2. Right Top: Python Source Tracker
+  $('#code').innerHTML = `
+    <div class="flex justify-between items-center text-xs font-mono uppercase text-ol pb-2 shrink-0 border-b border-s3/40">
+      <span class="flex items-center gap-1.5 text-fg font-semibold">
+        <span class="ms text-pri text-[18px]">code</span>
+        Python Source Tracker
+      </span>
+      <div class="flex items-center gap-2">
+        <span class="text-mut text-xs lowercase">${CODE[V.algo].length} lines</span>
+        <span class="text-pri font-bold bg-s1 px-2.5 py-0.5 rounded border border-s3">${V.algo}.py</span>
+      </div>
+    </div>
+    <div id="codeBox" class="rounded-xl bg-s1/60 p-3 mt-2.5 font-mono text-[13px] leading-relaxed overflow-y-auto overflow-x-auto border border-s3/80 h-[380px] min-h-[380px] max-h-[440px] flex flex-col gap-0.5 shadow-inner">
+      ${CODE[V.algo].map((t, i) => `
+        <div id="code-line-${i}" class="px-2.5 py-1 whitespace-pre rounded transition-colors flex items-center min-w-max ${i == s.l ? 'bg-pc/20 border-l-4 border-pc text-fg font-bold shadow-md' : 'text-ol/80 hover:text-fg hover:bg-s2'}">
+          <span class="inline-block w-7 text-right mr-3 text-ol/40 select-none font-mono shrink-0">${i + 1}</span>
+          <span class="font-mono">${t.replace(/</g, '&lt;')}</span>
+        </div>`).join('')}
+    </div>`;
+
+  const activeLine = document.getElementById(`code-line-${s.l}`);
+  if (activeLine) activeLine.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // 3. Right Middle: Execution State
+  const statVars = s.vars || [
+    ['pivot_value', s.piv != null ? s.a[s.piv] : '—', 'text-ter'],
+    ['left (i)', s.pi ?? '—', 'text-err'],
+    ['Comparisons', s.c, 'text-fg'],
+    ['pivot_idx', s.piv ?? '—', 'text-ter'],
+    ['right (j)', s.pj ?? '—', 'text-err'],
+    ['Swaps/Writes', s.w, 'text-pri']
+  ];
+  $('#state').innerHTML = `
+    <div class="flex justify-between items-center pb-2 border-b border-s3/40">
+      <span class="text-xs font-mono uppercase flex items-center gap-1.5 font-semibold text-fg">
+        <span class="ms text-pri text-[18px]">terminal</span>Execution State
+      </span>
+      <span class="px-2.5 py-0.5 rounded font-mono text-[11px] font-bold ${done ? 'bg-ok text-s0' : s.swp ? 'bg-err text-s0' : s.cmp ? 'bg-pc text-onpc' : 'bg-s3 text-fg'}">${done ? 'DONE' : s.swp ? 'WRITE/SWAP' : s.cmp ? 'COMPARE' : 'ACTIVE'}</span>
+    </div>
+    <div class="grid grid-cols-3 gap-2.5 mt-2.5 font-mono text-xs">
+      ${statVars.map(([a, b, c]) => `
+        <div class="p-2.5 rounded-lg bg-s1 border border-s3/60 flex flex-col justify-between">
+          <span class="text-[10px] text-mut font-medium uppercase tracking-tight">${a}</span>
+          <span class="text-xl font-bold ${c} tracking-tight mt-1">${b}</span>
+        </div>`).join('')}
+    </div>`;
+
+  // 4. Right Bottom: Why this step?
+  $('#why').innerHTML = `
+    <div class="flex items-center justify-between text-pri font-medium text-sm shrink-0 border-b border-s3/40 pb-1.5">
+      <div class="flex items-center gap-1.5">
+        <span class="ms text-pri text-[18px]">lightbulb</span>
+        <span>Why this step?</span>
+      </div>
+      <span class="text-[10px] font-mono text-ol uppercase">Invariant Logic</span>
+    </div>
+    <div class="text-xs text-mut leading-relaxed overflow-y-auto mt-2 flex-1 pr-1" style="height: 54px; max-height: 54px;">
+      ${s.m}
+    </div>`;
+
+  $('#ms').textContent = n + ' steps';
+
+  // 5. Bottom: Simulator Controls
+  $('#bar').innerHTML = `
+    <div class="flex items-center justify-between font-mono text-xs">
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-1 rounded bg-pc text-onpc font-bold text-xs">Step ${V.i} / ${n}</span>
+        <span class="text-mut text-xs">${pct}% Completed</span>
+      </div>
+      <div class="text-ol text-xs hidden sm:flex items-center gap-4">
+        <span>Step 0: Init</span>
+        <span class="text-ter font-semibold">Step ${V.i}: Active</span>
+        <span>Step ${n}: Sorted</span>
+      </div>
+    </div>
+    <input id="vScrub" type="range" min="0" max="${n}" value="${V.i}" class="cursor-pointer my-1">
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-s3/40">
+      <div class="flex items-center gap-1.5">
+        <button data-a="stp" data-v="first" class="${sec} px-3 py-2 flex items-center gap-1 text-xs" title="First step"><span class="ms text-[18px]">first_page</span></button>
+        <button data-a="stp" data-v="-1" class="${sec} px-3 py-2 flex items-center gap-1 text-xs" title="Step back"><span class="ms text-[18px]">chevron_left</span></button>
+        <button data-a="play" class="${pri} px-6 py-2 text-sm flex items-center gap-2 shadow-md"><span class="ms">${P ? 'pause' : 'play_arrow'}</span><span>${P ? 'Pause' : 'Play'}</span></button>
+        <button data-a="stp" data-v="1" class="${sec} px-3 py-2 flex items-center gap-1 text-xs" title="Step forward"><span class="ms text-[18px]">chevron_right</span></button>
+        <button data-a="stp" data-v="last" class="${sec} px-3 py-2 flex items-center gap-1 text-xs" title="Last step"><span class="ms text-[18px]">last_page</span></button>
+      </div>
+      <div class="flex items-center gap-2">
+        <button data-a="play" class="${sec} px-4 py-2 text-xs flex items-center gap-1.5"><span class="ms text-[16px]">replay</span>Replay</button>
+        <button data-a="reset" class="${sec} px-4 py-2 text-xs flex items-center gap-1.5"><span class="ms text-[16px]">restart_alt</span>Reset State</button>
+        <button data-a="exp" data-v="csv" class="${sec} px-3 py-2 text-xs">Export CSV</button>
+        <button data-a="exp" data-v="json" class="${sec} px-3 py-2 text-xs">JSON Trace</button>
+      </div>
+    </div>`;
+}
+
+function paintC() {
+  const pan = (S, al, id) => {
+    const s = S[Math.min(CP.i, S.length - 1)], m = META[al];
+    $('#' + id).innerHTML = `
+      <div class="bg-s1 rounded-xl p-4 flex flex-col gap-2.5 border border-s3">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="text-xl font-semibold">${m.n}</div>
+            <div class="text-xs font-mono text-pri">${m.f} · <span class="text-ter">Space: ${m.sp}</span></div>
+          </div>
+          <div class="font-mono text-xs">Step <b class="text-pri">${Math.min(CP.i, S.length - 1)}</b> / ${S.length - 1}</div>
+        </div>
+        <div class="bg-s0 rounded-lg p-2 border border-s3/40">${bars(s, 'h-48')}</div>
+        <div class="bg-s2 rounded-lg p-2 text-xs flex gap-2"><span class="ms text-pri">info</span>${s.m}</div>
+        <div class="grid grid-cols-3 gap-2 text-center font-mono text-xs">
+          ${[['Comparisons', s.c, 'text-pri'], ['Swaps/Writes', s.w, 'text-ter'], ['Status', CP.i >= S.length - 1 ? 'Done' : 'Running', CP.i >= S.length - 1 ? 'text-ok font-bold' : 'text-fg']].map(([a, b, c]) => `
+            <div class="bg-s2 rounded p-2">
+              <div class="text-[10px] text-ol uppercase">${a}</div>
+              <div class="text-base font-bold ${c}">${b}</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  };
+  pan(CP.SA, CP.a, 'pA');
+  pan(CP.SB, CP.b, 'pB');
+
+  const a = CP.SA.at(-1), b = CP.SB.at(-1);
+  const row = (t, x, y) => {
+    const m = Math.max(x, y, 1);
+    return `<div class="bg-s1 rounded-xl p-3 flex flex-col gap-2 border border-s3">
+      <div class="font-medium text-xs text-ol uppercase">${t}</div>
+      ${[[META[CP.a].n, x, 'bg-pri'], [META[CP.b].n, y, 'bg-sec']].map(([n, v, c]) => `
+        <div class="flex items-center gap-2 font-mono text-xs">
+          <span class="w-24 truncate text-mut">${n}</span>
+          <div class="flex-1 h-2 bg-s3 rounded-full overflow-hidden"><div class="${c} h-2 rounded-full" style="width:${(v / m) * 100}%"></div></div>
+          <span class="w-8 text-right font-bold">${v}</span>
+        </div>`).join('')}
+    </div>`;
+  };
+
+  const win = a.c == b.c ? 'Tie on comparisons' : (a.c < b.c ? META[CP.a].n : META[CP.b].n) + ' needed fewer comparisons';
+  $('#delta').innerHTML = `
+    <div class="flex items-center justify-between pb-2 border-b border-s3/40">
+      <div class="flex items-center gap-2">
+        <span class="ms text-pri">balance</span><span class="text-lg font-semibold">Synchronized Telemetry Delta</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 bg-s3 rounded text-ter">Lockstep Comparisons Active</span>
+      </div>
+      <div class="flex gap-2">
+        <button data-a="cexp" data-v="csv" class="${sec}">Export CSV</button>
+        <button data-a="cexp" data-v="json" class="${sec}">JSON Trace</button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-3 mt-3">${row('Total Comparisons', a.c, b.c)}${row('Total Swaps / Writes', a.w, b.w)}${row('Total Steps', CP.SA.length - 1, CP.SB.length - 1)}</div>
+    <div class="bg-s1 rounded-xl p-3.5 mt-3 text-mut border border-s3 text-xs leading-relaxed">
+      <span class="text-pri font-mono text-xs uppercase font-bold">Automated Analysis</span>
+      <p class="pt-1">On this ${CP.arr.length}-element dataset, <b class="text-fg">${win}</b> (${a.c} vs ${b.c}); writes: ${a.w} vs ${b.w}.</p>
+    </div>`;
+  $('#cpl').innerHTML = P ? 'Pause' : '<span class="ms">play_arrow</span>Synchronized Run';
+}
+
+function paintDS() {
+  $('#dprev').innerHTML = bars({ a: DS.arr }, 'h-40');
+  $('#dtxt').textContent = '[' + DS.arr.join(', ') + ']';
+}
+
+// Router that works unconditionally
+function route(targetRoute) {
+  stop();
+  if (targetRoute && views[targetRoute]) {
+    RT = targetRoute;
+  } else if (!RT || !views[RT]) {
+    let hash = '';
+    try { hash = (location.hash.slice(1) || '').toLowerCase(); } catch (e) {}
+    RT = views[hash] ? hash : 'visualize';
+  }
+
+  // Render top header nav links with icons & labels
+  $('#nav').innerHTML = NAV.map(([k, t, i]) => `
+    <button type="button" onclick="navTo('${k}', event)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition-colors border-0 text-xs font-medium ${k == RT ? 'bg-pc text-onpc font-semibold shadow-sm' : 'bg-transparent text-mut hover:text-fg hover:bg-s2'}">
+      <span class="ms text-[16px]">${i}</span><span>${t}</span>
+    </button>`).join('');
+
+  if (RT == 'visualize' && !V.S.length) ldV();
+  if (RT == 'compare' && !CP.SA.length) ldC();
+
+  $('#app').innerHTML = views[RT]();
+  const mm = META[RT == 'compare' ? CP.a : V.algo];
+  $('#crumb').innerHTML = `
+    <span class="text-mut">${mm.cat} Algorithms</span>
+    <span class="text-olv">/</span>
+    <span class="text-pri font-medium">${RT == 'compare' ? 'Benchmark & Compare' : mm.n}</span>
+    <span class="px-1.5 rounded bg-s3 text-mut">${mm.avg} Avg | ${mm.w} Worst</span>
+    <span class="px-1.5 rounded bg-s3 text-ter">Space: ${mm.sp}</span>`;
+
+  if (RT == 'visualize') { stratUI(); paintV(); }
+  if (RT == 'compare') paintC();
+  if (RT == 'datasets') paintDS();
+  window.scrollTo(0, 0);
+}
+
+const stratUI = () => {
+  const st = $('#strat');
+  if (!st) return;
+  st.innerHTML = V.algo == 'quick' ? `
+    <div class="flex items-center gap-1 p-0.5 bg-s1 rounded-lg border border-s3/40">
+      <button data-a="strat" data-v="hoare" class="${seg(ST == 'hoare')} py-1 px-2.5 text-xs">Hoare</button>
+      <button data-a="strat" data-v="lomuto" class="${seg(ST == 'lomuto')} py-1 px-2.5 text-xs">Lomuto</button>
+    </div>` : '';
+};
+
+const setArr = a => {
+  if (a.length < 2) return;
+  V.arr = a;
+  stop();
+  ldV();
+  route();
+};
+
+// ---- actions ----
+const act = {
+  play() {
+    if (RT == 'visualize') {
+      if (P) stop();
+      else {
+        if (V.i >= V.S.length - 1) { V.i = 0; V.lg = 0; }
+        start();
+      }
+      paintV();
+    }
+  },
+  reset() { stop(); V.i = 0; V.lg = 0; paintV(); },
+  stp(v) {
+    stop();
+    const n = V.S.length - 1;
+    V.i = v == 'first' ? 0 : v == 'last' ? n : Math.max(0, Math.min(n, V.i + +v));
+    paintV();
+  },
+  strat(v) { ST = v; stop(); ldV(); stratUI(); paintV(); },
+  apply() {
+    const t = TY(V.algo);
+    const v = ($('#vIn') || {}).value || '';
+    if (t == 'dp') {
+      const p = (v.match(/\d+\s*:\s*\d+/g) || []).map(x => x.split(':').map(Number)).slice(0, 8);
+      if (p.length) { V.items = p; stop(); ldV(); route(); }
+    } else {
+      if ($('#vT')) V.tg = +$('#vT').value;
+      setArr(parse(v));
+    }
+  },
+  pre(v) {
+    const t = TY(V.algo);
+    if (t == 'graph') V.gw = mkG();
+    else if (t == 'grid') mkW();
+    else if (t == 'dp') V.items = mkI();
+    else {
+      V.arr = mk(v, V.arr.length);
+      if (t == 'search') V.tg = V.arr[rnd(V.arr.length)];
+    }
+    stop(); ldV(); route();
+  },
+  view(v) { V.view = v; paintV(); },
+  audio() {
+    AU.on = !AU.on;
+    beep(440);
+    const au = $('#au');
+    if (au) au.className = 'w-9 h-5 rounded-full p-0.5 flex cursor-pointer transition-colors ' + (AU.on ? 'bg-ter justify-end' : 'bg-s4');
+  },
+  exp(v) {
+    const n = V.algo;
+    v == 'csv'
+      ? dl(n + '_trace.csv', ['step,comparisons,swaps,message,array', ...V.S.map((s, i) => [i, s.c, s.w, q(s.m), q(s.a ? s.a.join(' ') : '')].join(','))].join('\n'), 'text/csv')
+      : dl(n + '_trace.json', JSON.stringify({ algorithm: n, steps: V.S }, null, 2), 'application/json');
+  },
+  cexp(v) {
+    const A = CP.SA, B = CP.SB, n = Math.max(A.length, B.length);
+    v == 'csv'
+      ? dl('compare_trace.csv', [`step,${CP.a}_comparisons,${CP.a}_writes,${CP.b}_comparisons,${CP.b}_writes`, ...Array.from({ length: n }, (_, i) => {
+          const a = A[Math.min(i, A.length - 1)], b = B[Math.min(i, B.length - 1)];
+          return [i, a.c, a.w, b.c, b.w].join(',');
+        })].join('\n'), 'text/csv')
+      : dl('compare_trace.json', JSON.stringify({ input: CP.arr, [CP.a]: A, [CP.b]: B }, null, 2), 'application/json');
+  },
+  hexp() {
+    dl('history.csv', ['time,algorithm,n,steps,comparisons,writes', ...HIST.map(h => [q(h.t), q(h.al), h.n, h.st, h.c, h.w].join(','))].join('\n'), 'text/csv');
+  },
+  launch(k) { V.algo = k; V.S = []; navTo('visualize'); },
+  cmpAdd(k) {
+    CP.b = CP.a == k ? CP.b : k;
+    if (CP.a == CP.b) CP.b = Object.keys(META).find(x => x != CP.a);
+    if (CP.a == k) CP.a = k;
+    CP.SA = [];
+    navTo('compare');
+  },
+  fil(v) { FIL = v; route(); },
+  cpre(v) { stop(); CP.arr = mk(v, 20); ldC(); route(); },
+  cplay() {
+    if (P) stop();
+    else {
+      if (CP.i >= Math.max(CP.SA.length, CP.SB.length) - 1) CP.i = 0;
+      start();
+    }
+    paintC();
+  },
+  cstep() {
+    stop();
+    if (CP.i < Math.max(CP.SA.length, CP.SB.length) - 1) CP.i++;
+    paintC();
+  },
+  creset() { stop(); CP.i = 0; paintC(); },
+  dsk(v) { DS.k = v; DS.arr = mk(v, DS.n); route(); },
+  dsV() {
+    if (!['sort', 'search'].includes(TY(V.algo))) V.algo = 'quick';
+    setArr(DS.arr.slice());
+    navTo('visualize');
+  },
+  dsC() { CP.arr = DS.arr.slice(); ldC(); navTo('compare'); },
+  dlexport(fmt) {
+    let content = '', mime = 'text/plain', filename = 'dataset.' + fmt;
+    if (fmt == 'csv') { content = 'value\n' + DS.arr.join('\n'); mime = 'text/csv'; }
+    else if (fmt == 'json') { content = JSON.stringify(DS.arr, null, 2); mime = 'application/json'; }
+    dl(filename, content, mime);
+  },
+  clear() { HIST = []; try { localStorage.av = '[]'; } catch (e) {} route(); },
+  hdel(v) { HIST.splice(+v, 1); try { localStorage.av = JSON.stringify(HIST); } catch (e) {} route(); }
+};
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]');
+  if (b && act[b.dataset.a]) act[b.dataset.a](b.dataset.v);
+});
+
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id == 'vSp') { V.sp = +t.value; $('#sv').textContent = V.sp + 'x'; if (P) start(); }
+  else if (t.id == 'cSp') { CP.sp = +t.value; if (P) start(); }
+  else if (t.id == 'vScrub') { stop(); V.i = +t.value; paintV(); }
+  else if (t.id == 'vN') {
+    $('#nv').textContent = t.value;
+    if (TY(V.algo) == 'dp') V.cap = +t.value;
+    else {
+      V.arr = mk('rand', +t.value);
+      if ($('#vIn')) $('#vIn').value = '[' + V.arr + ']';
+      if (TY(V.algo) == 'search') {
+        V.tg = V.arr[rnd(V.arr.length)];
+        if ($('#vT')) $('#vT').value = V.tg;
+      }
+    }
+    stop(); ldV(); paintV();
+  }
+  else if (t.id == 'dN') { DS.n = +t.value; $('#dnv').textContent = DS.n; DS.arr = mk(DS.k, DS.n); paintDS(); }
+  else if (t.id == 'q') {
+    const p = t.selectionStart;
+    route();
+    const q = $('#q');
+    if (q) { q.focus(); q.setSelectionRange(p, p); }
+  }
+});
+
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id == 'vT') { V.tg = +t.value; stop(); ldV(); paintV(); }
+  else if (t.id == 'vAlgo') { V.algo = t.value; stop(); ldV(); route(); }
+  else if (t.id == 'cA' || t.id == 'cB') { CP.a = $('#cA').value; CP.b = $('#cB').value; stop(); ldC(); route(); }
+});
+
+document.addEventListener('keydown', e => {
+  if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) && e.target.type != 'range') return;
+  if (RT == 'visualize') {
+    if (e.code == 'Space') { e.preventDefault(); act.play(); }
+    else if (e.key == 'ArrowRight') act.stp('1');
+    else if (e.key == 'ArrowLeft') act.stp('-1');
+    else if (e.key == 'r' || e.key == 'R') act.reset();
+  } else if (RT == 'compare' && e.code == 'Space') {
+    e.preventDefault();
+    act.cplay();
+  }
+});
+
+window.addEventListener('hashchange', () => route());
+route();
+</script>
+</body>
+</html>
