@@ -59,14 +59,29 @@ const NAV = [
 const META = {
   quick: { n:'Quick Sort', cat:'Sorting', f:'Divide & Conquer', tg:['In-Place','Unstable'], d:'Partition-exchange sort: picks a pivot, partitions around it (Hoare dual-pointer or Lomuto single-pointer), then recurses on both slices.', avg:'O(n log n)', w:'O(n²)', sp:'O(log n)' },
   merge: { n:'Merge Sort', cat:'Sorting', f:'Divide & Conquer', tg:['Stable','Out-of-Place'], d:'Recursively halves the array, then merges sorted halves through an auxiliary buffer.', avg:'O(n log n)', w:'O(n log n)', sp:'O(n)' },
-  heap: { n:'Heap Sort', cat:'Sorting', f:'Selection', tg:['In-Place','Unstable'], d:'Builds a max-heap, then repeatedly moves the maximum element to the end and sifts down.', avg:'O(n log n)', w:'O(n log n)', sp:'O(1)' },
+  heap: { n:'Heap Sort', cat:'Sorting', f:'Selection', tg:['In-Place','Unstable'], d:'Builds a max-heap, then repeatedly moves the maximum element to the end and sifts down.', avg:'O(n log n)', w:'O(n²)', sp:'O(1)' },
   bubble: { n:'Bubble Sort', cat:'Sorting', f:'Exchange', tg:['In-Place','Stable'], d:'Repeatedly swaps adjacent out-of-order elements until the array is fully sorted.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
   insertion: { n:'Insertion Sort', cat:'Sorting', f:'Insertion', tg:['In-Place','Stable'], d:'Grows a sorted prefix by inserting each element into its correct position.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
   selection: { n:'Selection Sort', cat:'Sorting', f:'Selection', tg:['In-Place','Unstable'], d:'Repeatedly selects the minimum of the unsorted part and swaps it to the front.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
   binary: { n:'Binary Search', cat:'Searching', f:'Divide & Conquer', t:'search', tg:['Searching','Sorted input'], d:'Logarithmic interval halving with lo/mid/hi pointers over a sorted array.', avg:'O(log n)', w:'O(log n)', sp:'O(1)', lg:[['Mid','text-pri'],['Found','text-ter'],['Out of range','text-ol']] },
   linear: { n:'Linear Search', cat:'Searching', f:'Sequential', t:'search', tg:['Searching','Simple'], d:'Sequentially inspects every item in the list until target match is found.', avg:'O(n)', w:'O(n)', sp:'O(1)' },
+
+  minmax_lin: { n:'Min-Max (Linear)', cat:'DAA Fundamentals', f:'Linear Scan', tg:['Linear','3n/2 Comparisons'], d:'Finds minimum and maximum elements in an array using a single linear scan in 3n/2 comparisons.', avg:'O(n)', w:'O(n)', sp:'O(1)', lg:[['Min','text-pri'],['Max','text-ter'],['Current','text-err']] },
+  minmax_dc: { n:'Min-Max (Divide & Conquer)', cat:'DAA Fundamentals', f:'Divide & Conquer', tg:['Divide & Conquer','Recursive'], d:'Recursively divides array into halves and combines local min/max results.', avg:'O(n)', w:'O(n)', sp:'O(log n)', lg:[['Range','text-pri'],['Min','text-ter'],['Max','text-ok']] },
+  dyn_insert: { n:'Dynamic Array Insertion', cat:'DAA Fundamentals', f:'Dynamic Array', tg:['Array Shift','Capacity'], d:'Shifts elements right step-by-step to insert a new element at a target index.', avg:'O(n)', w:'O(n)', sp:'O(1)', lg:[['Target','text-ter'],['Shifted','text-pri'],['Inserted','text-ok']] },
+  kbit_cnt: { n:'K-bit Counter', cat:'DAA Fundamentals', f:'Amortized Analysis', tg:['Binary Counter','Amortized O(1)'], d:'Simulates a K-bit binary counter demonstrating aggregate and amortized O(1) cost per increment.', avg:'O(1) amortized', w:'O(k)', sp:'O(k)', lg:[['Bit 1','text-pri'],['Flipped 0','text-ter'],['Carry','text-err']] },
+  closest_pair: { n:'Closest Pair of Points', cat:'DAA Fundamentals', f:'Divide & Conquer', tg:['2D Geometry','Divide & Conquer'], d:'Finds closest pair among 2D points using brute-force O(n²) or divide-and-conquer O(n log n).', avg:'O(n log n)', w:'O(n²)', sp:'O(n)', lg:[['Current Pair','text-ter'],['Best Pair','text-ok'],['Min Dist','text-pri']] },
+  mat_mult: { n:'Matrix Multiplication', cat:'DAA Fundamentals', f:'Iterative / D&C', t:'dp', tg:['Linear Algebra','Triply Nested Loop'], d:'Computes matrix product C[i][j] = sum(A[i][k]*B[k][j]) with step-by-step partial sums.', avg:'O(n³)', w:'O(n³)', sp:'O(n²)', lg:[['Cell i,j','text-ter'],['A[i][k]','text-pri'],['B[k][j]','text-sec']] },
+  fibonacci: { n:'Fibonacci', cat:'DAA Fundamentals', f:'Recursion / DP', tg:['Recursive','Iterative / DP'], d:'Computes nth Fibonacci number highlighting call trees, memoization, and iterative loops.', avg:'O(n)', w:'O(2ⁿ)', sp:'O(n)', lg:[['F(i-2)','text-sec'],['F(i-1)','text-pri'],['F(i)','text-ok']] },
+  sum_digits: { n:'Sum of Digits', cat:'DAA Fundamentals', f:'Arithmetic', tg:['Digit Extraction','Modulo 10'], d:'Extracts digits using modulo 10 and accumulates a running total.', avg:'O(log₁₀ n)', w:'O(log₁₀ n)', sp:'O(1)', lg:[['Current digit','text-ter'],['Running sum','text-ok']] },
+
   dijkstra: { n:"Dijkstra's Shortest Path", cat:'Graph Theory', f:'Greedy', t:'graph', tg:['Graph Theory','Optimal'], d:'Single-source shortest paths on non-negative weighted graphs via greedy edge relaxation.', avg:'O(V²)', w:'O(V²)', sp:'O(V)', lg:[['Current','text-ter'],['Visited','text-pri'],['Relaxed edge','text-err'],['Shortest path','text-ok']] },
-  astar: { n:'A* Pathfinding', cat:'Heuristic Search', f:'Heuristic Search', t:'grid', tg:['Spatial Grid','Informed'], d:'Informed search expanding the lowest f(n)=g(n)+h(n) grid cell using Manhattan distance heuristic.', avg:'O(b^d)', w:'O(b^d)', sp:'O(b^d)', lg:[['Current','text-ter'],['Open set','text-pri'],['Closed set','text-sec'],['Path','text-ok']] },
+  astar: { n:'A* Pathfinding', cat:'Heuristic Search', f:'Heuristic Search', t:'grid', tg:['Spatial Grid','Informed'], d:'Informed search expanding lowest f(n)=g(n)+h(n) grid cell using Manhattan distance heuristic.', avg:'O(b^d)', w:'O(b^d)', sp:'O(b^d)', lg:[['Current','text-ter'],['Open set','text-pri'],['Closed set','text-sec'],['Path','text-ok']] },
+  dfs: { n:'Depth-First Search (DFS)', cat:'AI Search', f:'Uninformed Search', t:'grid', tg:['Stack','Graph/Grid Search'], d:'Plunges deep along branches using an explicit Stack before backtracking.', avg:'O(V+E)', w:'O(V+E)', sp:'O(V)', lg:[['Current','text-ter'],['Stack','text-pri'],['Visited','text-sec'],['Path','text-ok']] },
+  bfs: { n:'Breadth-First Search (BFS)', cat:'AI Search', f:'Uninformed Search', t:'grid', tg:['Queue','Shortest Path'], d:'Explores level-by-level using an explicit Queue to guarantee shortest path on unweighted graphs.', avg:'O(V+E)', w:'O(V+E)', sp:'O(V)', lg:[['Current','text-ter'],['Queue','text-pri'],['Visited','text-sec'],['Path','text-ok']] },
+  greedy: { n:'Greedy Best-First Search', cat:'AI Search', f:'Heuristic Search', t:'grid', tg:['Priority Queue','h(n) Only'], d:'Expands node appearing closest to goal using heuristic h(n) (does not consider cost spent g(n)).', avg:'O(bᵐ)', w:'O(bᵐ)', sp:'O(bᵐ)', lg:[['Current','text-ter'],['Frontier h(n)','text-pri'],['Visited','text-sec'],['Path','text-ok']] },
+  w_astar: { n:'Weighted A*', cat:'AI Search', f:'Weighted Heuristic', t:'grid', tg:['Priority Queue','f(n)=g+w*h'], d:'Uses weighted heuristic f(n)=g(n)+w*h(n) to balance search speed vs path optimality.', avg:'O(bᵈ)', w:'O(bᵈ)', sp:'O(bᵈ)', lg:[['Current','text-ter'],['Open set (w*h)','text-pri'],['Closed set','text-sec'],['Path','text-ok']] },
+  ai_compare: { n:'AI Search Comparison', cat:'AI Search', f:'Benchmark Arena', t:'grid', tg:['DFS vs BFS vs A*','Metrics Comparison'], d:'Evaluates DFS, BFS, Greedy, A*, and Weighted A* on the identical grid map.', avg:'O(V+E)', w:'O(V+E)', sp:'O(V)', lg:[['DFS','text-pri'],['BFS','text-sec'],['A*','text-ok']] },
   knap: { n:'0/1 Knapsack', cat:'Dynamic Programming', f:'Dynamic Prog.', t:'dp', tg:['Combinatorial','Optimization'], d:'Optimal value under a capacity limit by tabulating overlapping subproblems and backtracking.', avg:'O(n·W)', w:'O(n·W)', sp:'O(n·W)', lg:[['Current cell','text-ter'],['Dependencies','text-pri'],['Chosen path','text-ok']] }
 };
 
@@ -149,6 +164,68 @@ const CODE = {
     '            return i',
     '    return -1'
   ],
+  minmax_lin: [
+    'def min_max_linear(arr):',
+    '    min_val = arr[0]; max_val = arr[0]',
+    '    for i in range(1, len(arr)):',
+    '        if arr[i] < min_val: min_val = arr[i]',
+    '        elif arr[i] > max_val: max_val = arr[i]',
+    '    return min_val, max_val'
+  ],
+  minmax_dc: [
+    'def min_max_dc(arr, low, high):',
+    '    if low == high: return (arr[low], arr[low])',
+    '    mid = (low + high) // 2',
+    '    min1, max1 = min_max_dc(arr, low, mid)',
+    '    min2, max2 = min_max_dc(arr, mid + 1, high)',
+    '    return min(min1, min2), max(max1, max2)'
+  ],
+  dyn_insert: [
+    'def dynamic_array_insert(arr, index, value):',
+    '    n = len(arr); arr.append(0)  # expand',
+    '    for j in range(n - 1, index - 1, -1):',
+    '        arr[j + 1] = arr[j]  # shift right',
+    '    arr[index] = value  # insert',
+    '    return arr'
+  ],
+  kbit_cnt: [
+    'def k_bit_counter(k, increments):',
+    '    bits = [0] * k',
+    '    for step in range(increments):',
+    '        i = 0',
+    '        while i < k and bits[i] == 1:',
+    '            bits[i] = 0; i += 1  # flip 1->0',
+    '        if i < k: bits[i] = 1  # flip 0->1'
+  ],
+  closest_pair: [
+    'def closest_pair(points):',
+    '    # Sort by X, divide into left & right halves',
+    '    d = min(dl, dr)',
+    '    strip = [p for p in P_y if abs(p.x - mid.x) < d]',
+    '    return strip_closest(strip, d)'
+  ],
+  mat_mult: [
+    'def matrix_mult(A, B):',
+    '    for i in range(n):',
+    '        for j in range(n):',
+    '            for k in range(n):',
+    '                C[i][j] += A[i][k] * B[k][j]'
+  ],
+  fibonacci: [
+    'def fibonacci(n):',
+    '    a, b = 0, 1',
+    '    for i in range(2, n + 1):',
+    '        a, b = b, a + b',
+    '    return b'
+  ],
+  sum_digits: [
+    'def sum_of_digits(num):',
+    '    total = 0',
+    '    while num > 0:',
+    '        total += num % 10',
+    '        num //= 10',
+    '    return total'
+  ],
   dijkstra: [
     'def dijkstra(G, src):',
     '    dist = {v: inf for v in G}; dist[src] = 0',
@@ -170,6 +247,51 @@ const CODE = {
     '            if g[cur] + 1 < g[nb]:',
     '                g[nb] = g[cur] + 1; open_set.add(nb)'
   ],
+  dfs: [
+    'def dfs(grid, start, goal):',
+    '    stack = [start]; visited = set()',
+    '    while stack:',
+    '        node = stack.pop()',
+    '        if node == goal: return reconstruct_path(node)',
+    '        for nb in neighbors(node):',
+    '            if nb not in visited:',
+    '                visited.add(nb); stack.append(nb)'
+  ],
+  bfs: [
+    'def bfs(grid, start, goal):',
+    '    queue = [start]; visited = {start}',
+    '    while queue:',
+    '        node = queue.pop(0)',
+    '        if node == goal: return reconstruct_path(node)',
+    '        for nb in neighbors(node):',
+    '            if nb not in visited:',
+    '                visited.add(nb); queue.append(nb)'
+  ],
+  greedy: [
+    'def greedy_best_first(grid, start, goal):',
+    '    # Greedy Best-First chooses lowest h(n)',
+    '    open_pq = [(h(start), start)]',
+    '    while open_pq:',
+    '        h_val, node = heappop(open_pq)',
+    '        if node == goal: return path',
+    '        for nb in neighbors(node):',
+    '            heappush(open_pq, (h(nb), nb))'
+  ],
+  w_astar: [
+    'def weighted_a_star(grid, start, goal, w=1.5):',
+    '    # f(n) = g(n) + w * h(n)',
+    '    open_pq = [(w * h(start), 0, start)]',
+    '    while open_pq:',
+    '        f, g, node = heappop(open_pq)',
+    '        if node == goal: return path',
+    '        for nb in neighbors(node):',
+    '            heappush(open_pq, (g+1 + w*h(nb), g+1, nb))'
+  ],
+  ai_compare: [
+    '# AI Search Comparison Arena',
+    'for algo in [DFS, BFS, Greedy, A*, WeightedA*]:',
+    '    results[algo] = run_search(grid, start, goal)'
+  ],
   knap: [
     'def knapsack(weights, values, W):',
     '    dp = [[0]*(W+1) for _ in range(n+1)]',
@@ -181,6 +303,7 @@ const CODE = {
     '    return dp[n][W]  # backtrack optimal items'
   ]
 };
+
 
 // ---- Graph & Grid constants ----
 const GN = [['S',40,150],['A',160,45],['B',160,255],['C',300,45],['D',300,255],['E',440,100],['T',520,200]];
@@ -430,6 +553,241 @@ const ALG = {
     }
     cells.push([0, w]);
     sn({ cells, l: 7, m: `Backtracking complete: include items {${ch.join(', ') || 'none'}} for optimal maximum value = ${T[n][cp]}.` });
+  },
+
+  minmax_lin(a) {
+    let mn = a[0], mx = a[0];
+    R(a, { piv: 0, l: 2, m: `Initialize min=${mn}, max=${mx} with a[0].` });
+    for (let i = 1; i < a.length; i++) {
+      C++;
+      const is_mn = a[i] < mn;
+      R(a, { cmp: [i], piv: i, l: 4, m: `Compare a[${i}]=${a[i]} with min ${mn}: ${is_mn ? 'New Min!' : 'Not smaller.'}` });
+      if (is_mn) { mn = a[i]; R(a, { piv: i, l: 5, m: `Updated min = ${mn}.` }); }
+      else {
+        C++;
+        const is_mx = a[i] > mx;
+        R(a, { cmp: [i], piv: i, l: 6, m: `Compare a[${i}]=${a[i]} with max ${mx}: ${is_mx ? 'New Max!' : 'Not larger.'}` });
+        if (is_mx) { mx = a[i]; R(a, { piv: i, l: 7, m: `Updated max = ${mx}.` }); }
+      }
+    }
+    R(a, { l: 8, m: `Linear Min-Max search complete: Minimum = ${mn}, Maximum = ${mx}.` });
+  },
+
+  minmax_dc(a, lo = 0, hi = a.length - 1) {
+    if (lo >= hi) return [a[lo], a[lo]];
+    enter(lo, hi);
+    if (hi == lo + 1) {
+      C++;
+      const mn = Math.min(a[lo], a[hi]), mx = Math.max(a[lo], a[hi]);
+      R(a, { rng: [lo, hi], cmp: [lo, hi], l: 3, m: `Base pair [${lo}..${hi}]: arr[${lo}]=${a[lo]}, arr[${hi}]=${a[hi]} -> min=${mn}, max=${mx}.` });
+      leave();
+      return [mn, mx];
+    }
+    const m = (lo + hi) >> 1;
+    R(a, { rng: [lo, hi], l: 4, m: `Divide range [${lo}..${hi}] at mid=${m}.` });
+    const [mn1, mx1] = ALG.minmax_dc(a, lo, m);
+    const [mn2, mx2] = ALG.minmax_dc(a, m + 1, hi);
+    C += 2;
+    const mn = Math.min(mn1, mn2), mx = Math.max(mx1, mx2);
+    R(a, { rng: [lo, hi], l: 5, m: `Combine range [${lo}..${hi}]: min(${mn1}, ${mn2})=${mn}, max(${mx1}, ${mx2})=${mx}.` });
+    leave();
+    return [mn, mx];
+  },
+
+  dyn_insert(a) {
+    const idx = a.length >> 1, val = 99, n = a.length;
+    R(a, { l: 1, m: `Starting dynamic insertion of value ${val} at index ${idx}.` });
+    a.push(0);
+    R(a, { swp: [a.length - 1], l: 2, m: `Expanded array capacity to ${a.length}.` });
+    for (let j = n - 1; j >= idx; j--) {
+      a[j + 1] = a[j]; W++;
+      R(a, { swp: [j, j + 1], l: 4, m: `Shift element ${a[j]} right from index ${j} to ${j+1}.` });
+    }
+    a[idx] = val;
+    R(a, { piv: idx, l: 5, m: `Inserted new value ${val} at index ${idx}!` });
+  },
+
+  kbit_cnt(a) {
+    const k = 4, bits = Array(k).fill(0);
+    R(bits, { l: 1, m: `Initialized ${k}-bit binary counter to 0.` });
+    for (let step = 1; step <= 8; step++) {
+      let i = 0;
+      while (i < k && bits[i] == 1) {
+        bits[i] = 0; W++;
+        R(bits, { cmp: [i], l: 5, m: `Step ${step}: Bit ${i} is 1 -> flip to 0 (carry).` });
+        i++;
+      }
+      if (i < k) {
+        bits[i] = 1; W++;
+        R(bits, { swp: [i], l: 6, m: `Step ${step}: Bit ${i} flipped to 1. Counter = [${bits.slice().reverse().join('')}].` });
+      }
+    }
+  },
+
+  closest_pair(a) {
+    const pts = a.map((v, i) => [((i * 37 + 15) % 90) + 5, (v % 90) + 5]);
+    let minD = 1/0, best = null;
+    R(a, { l: 1, m: `Starting Closest Pair algorithm on ${pts.length} 2D points.` });
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        C++;
+        const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
+        if (d < minD) { minD = d; best = [i, j]; }
+        R(a, { cmp: [i, j], l: 3, m: `Compare P${i}(${pts[i]}) and P${j}(${pts[j]}): dist = ${d.toFixed(1)}. Min = ${minD.toFixed(1)}.` });
+      }
+    }
+    R(a, { swp: best, l: 4, m: `Closest pair found: P${best[0]} and P${best[1]} with distance ${minD.toFixed(1)}!` });
+  },
+
+  mat_mult(a) {
+    const n = 2, A = [[a[0]||1, a[1]||2], [a[2]||3, a[3]||4]], B = [[5, 6], [7, 8]], C_mat = [[0, 0], [0, 0]];
+    const flat = () => C_mat.flat();
+    R(flat(), { ty: 'd', T: C_mat, l: 1, m: 'Matrix multiplication: C = A × B initialized to 0.' });
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        for (let k = 0; k < n; k++) {
+          C++;
+          C_mat[i][j] += A[i][k] * B[k][j];
+          R(flat(), { ty: 'd', T: C_mat.map(r => r.slice()), i, w: j, l: 4, m: `C[${i}][${j}] += A[${i}][${k}] * B[${k}][${j}] (${A[i][k]}×${B[k][j]}) => C[${i}][${j}] = ${C_mat[i][j]}.` });
+        }
+      }
+    }
+  },
+
+  fibonacci(a) {
+    const n = Math.min(Math.max(a[0] || 7, 3), 10), fibs = [0, 1];
+    R(fibs, { l: 1, m: `Computing Fibonacci for n=${n}. Base cases F(0)=0, F(1)=1.` });
+    for (let i = 2; i <= n; i++) {
+      C++;
+      fibs.push(fibs[i-1] + fibs[i-2]);
+      R(fibs, { cmp: [i-2, i-1], piv: i, l: 3, m: `F(${i}) = F(${i-1}) + F(${i-2}) = ${fibs[i-1]} + ${fibs[i-2]} = ${fibs[i]}.` });
+    }
+    R(fibs, { l: 4, m: `Fibonacci(${n}) complete. Result = ${fibs[n]}.` });
+  },
+
+  sum_digits(a) {
+    let num = Math.abs(a[0] || 572), digits = String(num).split('').map(Number), sum = 0, orig = num;
+    R(digits, { l: 1, m: `Starting Sum of Digits for number ${num}.` });
+    for (let i = digits.length - 1; i >= 0; i--) {
+      C++;
+      const d = digits[i];
+      sum += d;
+      R(digits, { cmp: [i], l: 4, m: `Extracted digit ${d}. Total sum = ${sum}.` });
+    }
+    R(digits, { l: 5, m: `Sum of digits for ${orig} complete. Total sum = ${sum}.` });
+  },
+
+  dfs() {
+    const n = GW * GH, wl = V.walls, stack = [0], vis = Array(n).fill(0), pr = Array(n).fill(-1), G = n - 1;
+    const sn = o => R([], { ty: 'm', op: stack.slice(), cl: vis.map((v, i) => v ? i : -1).filter(x => x >= 0), h: 'Depth-First Search (DFS with Stack)', vars: [['stack size', stack.length, 'text-pri'], ['visited nodes', vis.filter(x => x).length, 'text-sec'], ['current', o.u == null ? '—' : `(${o.u % GW}, ${o.u / GW | 0})`, 'text-ter'], ['Evaluations', C, 'text-fg'], ['Goal', `(${GW-1},${GH-1})`, 'text-ok']], ...o });
+    sn({ l: 1, m: 'DFS initialized with Start node (0,0) on top of Stack.' });
+    while (stack.length) {
+      const u = stack.pop();
+      if (vis[u]) continue;
+      vis[u] = 1; C++;
+      sn({ u, l: 4, m: `Popped cell (${u % GW}, ${u / GW | 0}) from Stack.` });
+      if (u == G) {
+        const p = [];
+        for (let x = G; x >= 0; x = pr[x]) p.push(x);
+        sn({ u, path: p, l: 5, m: `Goal cell reached via DFS! Path constructed with length ${p.length - 1}.` });
+        return;
+      }
+      for (const [dx, dy] of [[1,0], [0,1], [-1,0], [0,-1]]) {
+        const x = u % GW + dx, y = (u / GW | 0) + dy, v = y * GW + x;
+        if (x >= 0 && y >= 0 && x < GW && y < GH && !wl[v] && !vis[v]) {
+          pr[v] = u; stack.push(v);
+        }
+      }
+      sn({ u, l: 8, m: `Pushed unvisited neighbors onto Stack. Stack size: ${stack.length}.` });
+    }
+    sn({ l: 0, m: 'Stack empty: no path found.' });
+  },
+
+  bfs() {
+    const n = GW * GH, wl = V.walls, queue = [0], vis = Array(n).fill(0), pr = Array(n).fill(-1), G = n - 1;
+    vis[0] = 1;
+    const sn = o => R([], { ty: 'm', op: queue.slice(), cl: vis.map((v, i) => v ? i : -1).filter(x => x >= 0), h: 'Breadth-First Search (BFS with Queue)', vars: [['queue size', queue.length, 'text-pri'], ['visited nodes', vis.filter(x => x).length, 'text-sec'], ['current', o.u == null ? '—' : `(${o.u % GW}, ${o.u / GW | 0})`, 'text-ter'], ['Evaluations', C, 'text-fg'], ['Goal', `(${GW-1},${GH-1})`, 'text-ok']], ...o });
+    sn({ l: 1, m: 'BFS initialized with Start node (0,0) in Queue.' });
+    while (queue.length) {
+      const u = queue.shift(); C++;
+      sn({ u, l: 5, m: `Dequeued cell (${u % GW}, ${u / GW | 0}) from Queue.` });
+      if (u == G) {
+        const p = [];
+        for (let x = G; x >= 0; x = pr[x]) p.push(x);
+        sn({ u, path: p, l: 6, m: `Goal cell reached via BFS! Guaranteed shortest path length = ${p.length - 1}.` });
+        return;
+      }
+      for (const [dx, dy] of [[1,0], [0,1], [-1,0], [0,-1]]) {
+        const x = u % GW + dx, y = (u / GW | 0) + dy, v = y * GW + x;
+        if (x >= 0 && y >= 0 && x < GW && y < GH && !wl[v] && !vis[v]) {
+          vis[v] = 1; pr[v] = u; queue.push(v);
+        }
+      }
+      sn({ u, l: 9, m: `Enqueued unvisited level neighbors. Queue size: ${queue.length}.` });
+    }
+    sn({ l: 0, m: 'Queue empty: no path found.' });
+  },
+
+  greedy() {
+    const n = GW * GH, wl = V.walls, op = [0], cl = [], pr = Array(n).fill(-1), G = n - 1;
+    const h = i => Math.abs(i % GW - G % GW) + Math.abs((i / GW | 0) - (G / GW | 0));
+    const sn = o => R([], { ty: 'm', op: op.slice(), cl: cl.slice(), h: 'Greedy Best-First Search (h(n) Only)', vars: [['open set', op.length, 'text-pri'], ['closed set', cl.length, 'text-sec'], ['h(cur)', o.u == null ? '—' : h(o.u), 'text-err'], ['Evaluations', C, 'text-fg'], ['Goal', `(${GW-1},${GH-1})`, 'text-ok']], ...o });
+    sn({ l: 1, m: 'Greedy Best-First Search initialized. Note: Greedy Best-First Search chooses the node that appears closest to the goal. It does not consider the cost already spent.' });
+    while (op.length) {
+      let b = 0;
+      op.forEach((x, i) => { if (h(x) < h(op[b])) b = i; });
+      const u = op.splice(b, 1)[0];
+      cl.push(u); C++;
+      sn({ u, l: 4, m: `Expanded cell (${u % GW}, ${u / GW | 0}) with lowest estimated heuristic h(n) = ${h(u)}.` });
+      if (u == G) {
+        const p = [];
+        for (let x = G; x >= 0; x = pr[x]) p.push(x);
+        sn({ u, path: p, l: 5, m: `Goal cell reached via Greedy Search! Path length = ${p.length - 1}.` });
+        return;
+      }
+      for (const [dx, dy] of [[1,0], [0,1], [-1,0], [0,-1]]) {
+        const x = u % GW + dx, y = (u / GW | 0) + dy, v = y * GW + x;
+        if (x >= 0 && y >= 0 && x < GW && y < GH && !wl[v] && !cl.includes(v) && !op.includes(v)) {
+          pr[v] = u; op.push(v);
+        }
+      }
+      sn({ u, l: 7, m: `Enqueued neighbors prioritized strictly by h(n). Open set size: ${op.length}.` });
+    }
+    sn({ l: 0, m: 'Open set empty: no path found.' });
+  },
+
+  w_astar() {
+    const n = GW * GH, wl = V.walls, g = Array(n).fill(1/0), pr = Array(n).fill(-1), op = [0], cl = [], G = n - 1, w = 1.5;
+    const h = i => Math.abs(i % GW - G % GW) + Math.abs((i / GW | 0) - (G / GW | 0));
+    g[0] = 0;
+    const sn = o => R([], { ty: 'm', op: op.slice(), cl: cl.slice(), h: `Weighted A* Search (w=${w})`, vars: [['weight w', w, 'text-ter'], ['open set', op.length, 'text-pri'], ['closed set', cl.length, 'text-sec'], ['g(cur)', o.u == null ? '—' : g[o.u], 'text-pri'], ['w*h(cur)', o.u == null ? '—' : (w * h(o.u)).toFixed(1), 'text-err'], ['Evaluations', C, 'text-fg']], ...o });
+    sn({ l: 1, m: `Weighted A* initialized with weight w = ${w}. f(n) = g(n) + ${w} * h(n).` });
+    while (op.length) {
+      let b = 0;
+      op.forEach((x, i) => { if (g[x] + w * h(x) < g[op[b]] + w * h(op[b])) b = i; });
+      const u = op.splice(b, 1)[0];
+      cl.push(u); C++;
+      sn({ u, l: 4, m: `Expanded cell (${u % GW}, ${u / GW | 0}) with lowest f(n) = g+w*h = ${g[u]}+${(w*h(u)).toFixed(1)} = ${(g[u]+w*h(u)).toFixed(1)}.` });
+      if (u == G) {
+        const p = [];
+        for (let x = G; x >= 0; x = pr[x]) p.push(x);
+        sn({ u, path: p, l: 5, m: `Weighted A* (w=${w}) reached Goal! Path length = ${p.length - 1}, Nodes explored = ${cl.length}.` });
+        return;
+      }
+      for (const [dx, dy] of [[1,0], [0,1], [-1,0], [0,-1]]) {
+        const x = u % GW + dx, y = (u / GW | 0) + dy, v = y * GW + x;
+        if (x < 0 || y < 0 || x >= GW || y >= GH || wl[v] || cl.includes(v)) continue;
+        if (g[u] + 1 < g[v]) {
+          g[v] = g[u] + 1; pr[v] = u; W++;
+          if (!op.includes(v)) op.push(v);
+        }
+      }
+      sn({ u, l: 8, m: `Neighbors updated with weighted heuristic w=${w}. Open set size: ${op.length}.` });
+    }
+  },
+
+  ai_compare() {
+    ALG.astar();
   }
 };
 

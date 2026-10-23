@@ -5,6 +5,7 @@ Serialization utilities converting ExecutionTrace and AlgorithmStep objects
 into JSON-compliant dictionaries for the REST API.
 """
 
+from dataclasses import asdict, field
 from typing import Dict, Any
 try:
     from Sorted.algorithms.steps import ExecutionTrace, AlgorithmStep

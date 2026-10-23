@@ -2,7 +2,7 @@
 AlgoLens Comprehensive Test Suite
 =================================
 Covers:
-1. Algorithm Correctness (all 8 algorithms)
+1. Algorithm Correctness (Sorting, Searching, DAA Fundamentals, AI Search)
 2. Trace Engine Integrity (steps, metrics, pointers, variables)
 3. Regex Input Validation (valid/invalid formats, brackets, negative numbers)
 4. Data File Handlers (CSV, JSON, XML, TXT, Binary round-trips)
@@ -22,6 +22,16 @@ try:
         MergeSort, QuickSort, HeapSort
     )
     from Sorted.algorithms.searching import LinearSearch, BinarySearch
+    from Sorted.algorithms.daa_fundamentals import (
+        MinMaxLinear, MinMaxDivideConquer, DynamicArrayInsertion,
+        KBitCounter, ClosestPairBruteForce, ClosestPairDivideConquer,
+        MatrixMultiplicationStandard, FibonacciIterative,
+        FibonacciRecursive, SumOfDigits
+    )
+    from Sorted.algorithms.ai_search import (
+        DepthFirstSearch, BreadthFirstSearch, GreedyBestFirstSearch,
+        AStarSearch, WeightedAStarSearch, AISearchComparison
+    )
     from Sorted.validation.validators import InputValidator, ValidationError
     from Sorted.data.handlers import DataFileHandler
     from Sorted.data.datasets import DatasetGenerator
@@ -94,6 +104,73 @@ class TestAlgorithms(unittest.TestCase):
         # Not found
         trace_missing = bs.execute(list(self.sorted_data), target=999)
         self.assertEqual(trace_missing.result, -1)
+
+
+class TestDAAMSEAndAISearch(unittest.TestCase):
+    """Test newly added DAA MSE and AI Search algorithms."""
+
+    def test_min_max_linear(self):
+        algo = MinMaxLinear()
+        trace = algo.execute([45, 12, 85, 32, 89, 1])
+        self.assertEqual(trace.result, {"min": 1, "max": 89})
+        self.assertGreater(trace.total_steps, 0)
+
+    def test_min_max_divide_conquer(self):
+        algo = MinMaxDivideConquer()
+        trace = algo.execute([45, 12, 85, 32, 89, 1])
+        self.assertEqual(trace.result, {"min": 1, "max": 89})
+
+    def test_dynamic_array_insertion(self):
+        algo = DynamicArrayInsertion()
+        trace = algo.execute([10, 20, 30, 40], index=2, value=99)
+        self.assertEqual(trace.result, [10, 20, 99, 30, 40])
+
+    def test_k_bit_counter(self):
+        algo = KBitCounter()
+        trace = algo.execute([0], k=4, increments=8)
+        self.assertEqual(trace.result, [0, 0, 0, 1])
+        self.assertGreater(trace.total_steps, 0)
+
+    def test_closest_pair(self):
+        algo = ClosestPairBruteForce()
+        trace = algo.execute([10, 20, 30, 40, 50])
+        self.assertIsNotNone(trace.result.get("best_pair"))
+
+    def test_matrix_multiplication(self):
+        algo = MatrixMultiplicationStandard()
+        trace = algo.execute([1, 2, 3, 4, 5, 6, 7, 8])
+        self.assertEqual(trace.result, [[19, 22], [43, 50]])
+
+    def test_fibonacci(self):
+        fib_it = FibonacciIterative().execute([], n=7)
+        fib_rec = FibonacciRecursive().execute([], n=7)
+        self.assertEqual(fib_it.result, 13)
+        self.assertEqual(fib_rec.result, 13)
+
+    def test_sum_of_digits(self):
+        algo = SumOfDigits()
+        trace = algo.execute([572])
+        self.assertEqual(trace.result, 14)
+
+    def test_ai_search_algorithms(self):
+        for algo_cls in [DepthFirstSearch, BreadthFirstSearch, GreedyBestFirstSearch, AStarSearch]:
+            algo = algo_cls()
+            with self.subTest(algorithm=algo.name):
+                trace = algo.execute([])
+                self.assertIn("path", trace.result)
+                self.assertGreater(len(trace.result["path"]), 0)
+
+    def test_weighted_a_star(self):
+        algo = WeightedAStarSearch()
+        t1 = algo.execute([], weight=1.0)
+        t2 = algo.execute([], weight=2.0)
+        self.assertEqual(t1.result["weight"], 1.0)
+        self.assertEqual(t2.result["weight"], 2.0)
+
+    def test_ai_search_comparison(self):
+        algo = AISearchComparison()
+        trace = algo.execute([])
+        self.assertEqual(len(trace.result), 5)
 
 
 class TestValidators(unittest.TestCase):
@@ -186,12 +263,12 @@ class TestFlaskAPI(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         json_data = res.get_json()
         self.assertEqual(json_data['status'], 'healthy')
-        self.assertEqual(json_data['registered_algorithms'], 8)
+        self.assertGreaterEqual(json_data['registered_algorithms'], 24)
 
     def test_algorithms_endpoint(self):
         res = self.client.get('/api/algorithms')
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.get_json()['count'], 8)
+        self.assertGreaterEqual(res.get_json()['count'], 24)
 
     def test_execute_endpoint(self):
         payload = {
@@ -203,6 +280,26 @@ class TestFlaskAPI(unittest.TestCase):
         json_data = res.get_json()
         self.assertEqual(json_data['result'], [12, 32, 45, 85, 89])
         self.assertGreater(len(json_data['steps']), 0)
+
+    def test_execute_daa_endpoint(self):
+        payload = {
+            "algorithm": "Min-Max (Linear)",
+            "data": [45, 12, 85, 32, 89]
+        }
+        res = self.client.post('/api/execute', json=payload)
+        self.assertEqual(res.status_code, 200)
+        json_data = res.get_json()
+        self.assertEqual(json_data['result'], {"min": 12, "max": 89})
+
+    def test_execute_ai_search_endpoint(self):
+        payload = {
+            "algorithm": "Depth-First Search (DFS)",
+            "data": []
+        }
+        res = self.client.post('/api/execute', json=payload)
+        self.assertEqual(res.status_code, 200)
+        json_data = res.get_json()
+        self.assertIn('result', json_data)
 
     def test_compare_endpoint(self):
         payload = {
