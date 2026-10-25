@@ -25,9 +25,11 @@ input[type=range]{accent-color:#7c6cff;width:100%}
 h1,h2,h3{font-family:'Bricolage Grotesque',Geist,sans-serif;letter-spacing:-.025em;font-weight:700}
 :focus-visible{outline:2px solid #8f9bff;outline-offset:2px}
 #scene{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:none}
-.micro-slats{position:relative;width:100%;height:100%;overflow:hidden}
-#bg-slats{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:none;pointer-events:none;overflow:hidden}
-#bg-slats canvas{width:100%!important;height:100%!important;display:block}
+.shape-waves{position:relative;width:100%;height:100%;overflow:hidden;pointer-events:none;isolation:isolate}
+.shape-waves__canvas{position:absolute;inset:0;display:block;width:100%;height:100%;opacity:0;transition:opacity 600ms cubic-bezier(.22,1,.36,1);pointer-events:none}
+.shape-waves[data-ready='true'] .shape-waves__canvas{opacity:1}
+@media(prefers-reduced-motion:reduce){.shape-waves__canvas{transition:none}}
+#bg-shapes{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:none;pointer-events:none;overflow:hidden}
 #app{position:relative;z-index:1;padding-top:76px;min-height:100vh;display:flex;flex-direction:column}
 body[data-r=home] #app{padding-top:0}
 #app.vin>*{animation:vin .4s cubic-bezier(.2,.7,.2,1) both}
@@ -107,7 +109,9 @@ select,input:not([type=range]):not([type=checkbox]):not([type=file]){border-radi
 </head>
 <body class="bg-bg text-fg font-sans antialiased text-[13px]">
 <canvas id="scene" aria-hidden="true"></canvas>
-<div id="bg-slats" class="micro-slats" aria-hidden="true"></div>
+<div id="bg-shapes" class="shape-waves" aria-hidden="true">
+  <canvas class="shape-waves__canvas"></canvas>
+</div>
 
 <!-- Fixed Global Navbar -->
 <header id="fn">
@@ -1864,51 +1868,50 @@ function scene(on) {
   SC.run();
 }
 
-let SLATS = null;
+let SHAPES = null;
 function updateBackgrounds(r) {
   const isHome = (r === 'home');
   // 1. Landing 3D scene (Three.js with floating geometric meshes & sorting bars)
   scene(isHome);
 
-  // 2. MicroSlats background (STRICTLY for algorithm visualizer & image processing non-home pages)
-  const bg = $('#bg-slats');
+  // 2. ShapeWaves background (STRICTLY for algorithm visualizer & image processing non-home pages)
+  const bg = $('#bg-shapes');
   if (isHome) {
-    if (SLATS) SLATS.hide();
+    if (SHAPES) SHAPES.hide();
     else if (bg) bg.style.display = 'none';
   } else {
-    if (!SLATS) {
-      if (bg && window.createMicroSlats) {
-        SLATS = window.createMicroSlats(bg, {
-          preset: 'swell',
-          color: '#7c3aed',
-          glintColor: '#ffffff',
+    if (!SHAPES) {
+      const cv = bg ? bg.querySelector('.shape-waves__canvas') : null;
+      if (bg && cv && window.createShapeWaves) {
+        SHAPES = window.createShapeWaves(bg, cv, {
+          text: '</>',
+          fontFamily: 'Geist, "Geist Sans", system-ui, sans-serif',
+          fontWeight: 500,
+          textSize: 0.6,
+          shapes: 'mixed',
+          cellSize: 10,
+          dotSize: 0.75,
+          color: '#693aed',
+          hoverColor: '#83aeea',
           backgroundColor: '#120f17',
-          slatWidth: 10,
-          slatHeight: 25,
-          gap: 3,
-          roundness: 0.75,
+          speed: 1,
+          scale: 1,
+          contrast: 1,
+          brightness: 0.4,
+          flow: 0,
+          direction: 0,
+          fade: 0.25,
           interactive: true,
-          cursorStrength: 1,
-          cursorSize: 40,
-          swirl: 0,
-          trail: 1.4,
-          lean: 0,
+          splashRadius: 40,
+          splashStrength: 0.4,
+          glow: 0.35,
           intro: true,
-          scale: 1.5,
-          speed: 0.6,
-          direction: 250,
-          chop: 0.55,
-          stretch: 0,
-          glint: 0.7,
-          contrast: 1.25,
-          perspective: 0.55,
-          fog: 0.55,
-          introDuration: 1.5,
+          introDuration: 1.6,
           paused: false
         });
       }
     }
-    if (SLATS) SLATS.show();
+    if (SHAPES) SHAPES.show();
     else if (bg) bg.style.display = 'block';
   }
 }
@@ -2131,8 +2134,8 @@ window.addEventListener('hashchange', () => { const h = (location.hash.slice(1) 
 route();
 </script>
 <script type="module">
-  import { createMicroSlats } from '/static/micro-slats.js';
-  window.createMicroSlats = createMicroSlats;
+  import { createShapeWaves } from '/static/shape-waves.js';
+  window.createShapeWaves = createShapeWaves;
   if (typeof updateBackgrounds === 'function' && typeof RT !== 'undefined') {
     updateBackgrounds(RT);
   }
