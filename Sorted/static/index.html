@@ -25,6 +25,9 @@ input[type=range]{accent-color:#7c6cff;width:100%}
 h1,h2,h3{font-family:'Bricolage Grotesque',Geist,sans-serif;letter-spacing:-.025em;font-weight:700}
 :focus-visible{outline:2px solid #8f9bff;outline-offset:2px}
 #scene{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:none}
+.micro-slats{position:relative;width:100%;height:100%;overflow:hidden}
+#bg-slats{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:none;pointer-events:none;overflow:hidden}
+#bg-slats canvas{width:100%!important;height:100%!important;display:block}
 #app{position:relative;z-index:1;padding-top:76px;min-height:100vh;display:flex;flex-direction:column}
 body[data-r=home] #app{padding-top:0}
 #app.vin>*{animation:vin .4s cubic-bezier(.2,.7,.2,1) both}
@@ -66,7 +69,7 @@ body[data-r=home] #app{padding-top:0}
 
 /* Restyle Existing Panels and Controls */
 body [class*=rounded-xl].bg-s0,body [class*=rounded-xl].bg-s1{border-radius:20px;border-color:var(--bd);background:linear-gradient(180deg,rgba(24,28,62,.55),rgba(12,14,34,.55));-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 10px 30px -18px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.04)}
-body .bg-pc{background-image:linear-gradient(135deg,#4f8cff,#7c5cff);color:#fff}
+body .bg-pc{background-image:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:1px solid rgba(165,145,255,.35);box-shadow:0 4px 14px -2px rgba(99,102,241,.45),inset 0 1px 0 rgba(255,255,255,.22)}
 body button{transition:background .2s,color .2s,transform .15s,box-shadow .2s,border-color .2s}
 body button:active{transform:scale(.97)}
 body .uppercase{text-transform:none}
@@ -79,12 +82,12 @@ select,input:not([type=range]):not([type=checkbox]):not([type=file]){border-radi
 .hero-in{position:relative;max-width:1180px;width:100%;margin:0 auto}
 .hero h1{font-size:clamp(2.8rem,7.5vw,5.8rem);line-height:1.02;font-weight:700;letter-spacing:-.04em;max-width:14ch;color:#f4f5ff;text-wrap:balance}
 .hero p{margin-top:24px;max-width:38rem;font-size:clamp(1rem,1.5vw,1.18rem);line-height:1.6;color:#aeb4d6}
-.cta{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:18px;border:1px solid transparent;cursor:pointer;font:600 15px Geist,sans-serif;color:#fff;transition:transform .2s,box-shadow .25s,background .25s,border-color .25s}
-.cta .ms{font-size:22px}
-.cta-pri{background:linear-gradient(135deg,#4f8cff,#7c5cff 60%,#a05cff);box-shadow:0 14px 44px -10px rgba(110,100,255,.85),inset 0 1px 0 rgba(255,255,255,.25)}
-.cta-pri:hover{transform:translateY(-2px);box-shadow:0 18px 56px -8px rgba(124,108,255,1),inset 0 1px 0 rgba(255,255,255,.3)}
-.cta-gl{background:rgba(255,255,255,.06);border-color:rgba(170,180,255,.28);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.cta-gl:hover{transform:translateY(-2px);background:rgba(255,255,255,.1);border-color:rgba(190,170,255,.55);box-shadow:0 14px 40px -14px rgba(160,100,255,.7)}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:13px 24px;border-radius:10px;border:1px solid transparent;cursor:pointer;font:600 14px Geist,-apple-system,sans-serif;color:#fff;letter-spacing:-.01em;transition:all .2s cubic-bezier(.2,.8,.2,1)}
+.cta .ms{font-size:18px}
+.cta-pri{background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);border-color:rgba(165,145,255,.35);box-shadow:0 4px 14px -2px rgba(99,102,241,.45),inset 0 1px 0 rgba(255,255,255,.22)}
+.cta-pri:hover{transform:translateY(-1px);background:linear-gradient(135deg,#6d70ff 0%,#9869ff 100%);box-shadow:0 8px 22px -2px rgba(99,102,241,.65),inset 0 1px 0 rgba(255,255,255,.32)}
+.cta-gl{background:rgba(255,255,255,.05);border-color:rgba(140,120,240,.22);color:#e2e8f0;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.cta-gl:hover{transform:translateY(-1px);background:rgba(255,255,255,.09);border-color:rgba(160,140,255,.45);color:#fff;box-shadow:0 6px 18px -4px rgba(0,0,0,.4)}
 .cue{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--bd);background:rgba(255,255,255,.05);color:#a9afd0;cursor:pointer}
 .cue:hover{color:#fff;background:rgba(255,255,255,.1)}
 .ws{padding:30px 24px 70px}
@@ -104,6 +107,7 @@ select,input:not([type=range]):not([type=checkbox]):not([type=file]){border-radi
 </head>
 <body class="bg-bg text-fg font-sans antialiased text-[13px]">
 <canvas id="scene" aria-hidden="true"></canvas>
+<div id="bg-slats" class="micro-slats" aria-hidden="true"></div>
 
 <!-- Fixed Global Navbar -->
 <header id="fn">
@@ -1142,10 +1146,10 @@ const tabs = () => {
   </div>`;
 };
 
-const btn = 'px-3 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer ';
-const pri = btn + 'bg-pc text-onpc font-semibold hover:brightness-110 shadow-md';
-const sec = btn + 'bg-s3 text-fg hover:bg-s4';
-const seg = on => btn + (on ? 'bg-pc text-onpc font-medium shadow-sm' : 'text-mut hover:text-fg');
+const btn = 'px-3 py-1.5 rounded-lg font-mono text-xs transition-all cursor-pointer border ';
+const pri = btn + 'bg-pc text-onpc font-semibold hover:brightness-110 shadow-sm border-indigo-400/30';
+const sec = btn + 'bg-s3/80 text-fg hover:bg-s4 border-white/5 hover:border-white/10';
+const seg = on => btn + (on ? 'bg-pc text-onpc font-medium shadow-sm border-indigo-400/30' : 'bg-transparent text-mut hover:text-fg hover:bg-white/5 border-transparent');
 const lab = t => `<label class="text-[10px] font-mono uppercase tracking-wider text-ol">${t}</label>`;
 const opts = (sel, c) => Object.entries(META).filter(([k, m]) => !c || !m.t).map(([k, m]) => `<option value="${k}" ${k == sel ? 'selected' : ''}>${m.n}</option>`).join('');
 
@@ -1860,6 +1864,56 @@ function scene(on) {
   SC.run();
 }
 
+let SLATS = null;
+function updateBackgrounds(r) {
+  const isHome = (r === 'home');
+  // 1. Landing 3D scene (Three.js with floating geometric meshes & sorting bars)
+  scene(isHome);
+
+  // 2. MicroSlats background (STRICTLY for algorithm visualizer & image processing non-home pages)
+  const bg = $('#bg-slats');
+  if (isHome) {
+    if (SLATS) SLATS.hide();
+    else if (bg) bg.style.display = 'none';
+  } else {
+    if (!SLATS) {
+      if (bg && window.createMicroSlats) {
+        SLATS = window.createMicroSlats(bg, {
+          preset: 'swell',
+          color: '#7c3aed',
+          glintColor: '#ffffff',
+          backgroundColor: '#120f17',
+          slatWidth: 10,
+          slatHeight: 25,
+          gap: 3,
+          roundness: 0.75,
+          interactive: true,
+          cursorStrength: 1,
+          cursorSize: 40,
+          swirl: 0,
+          trail: 1.4,
+          lean: 0,
+          intro: true,
+          scale: 1.5,
+          speed: 0.6,
+          direction: 250,
+          chop: 0.55,
+          stretch: 0,
+          glint: 0.7,
+          contrast: 1.25,
+          perspective: 0.55,
+          fog: 0.55,
+          introDuration: 1.5,
+          paused: false
+        });
+      }
+    }
+    if (SLATS) SLATS.show();
+    else if (bg) bg.style.display = 'block';
+  }
+}
+window.updateBackgrounds = updateBackgrounds;
+
 // Router that works unconditionally
 function route(targetRoute) {
   stop();
@@ -1885,7 +1939,7 @@ function route(targetRoute) {
 
   $('#app').classList.toggle('vin', chg);
   $('#app').innerHTML = subnav() + views[RT]() + renderFooter();
-  scene(RT == 'home');
+  updateBackgrounds(RT);
 
   if (RT == 'visualize') { stratUI(); paintV(); }
   if (RT == 'compare') paintC();
@@ -2075,6 +2129,13 @@ document.addEventListener('keydown', e => {
 
 window.addEventListener('hashchange', () => { const h = (location.hash.slice(1) || 'home').toLowerCase(); if (views[h] && h !== RT) route(h); });
 route();
+</script>
+<script type="module">
+  import { createMicroSlats } from '/static/micro-slats.js';
+  window.createMicroSlats = createMicroSlats;
+  if (typeof updateBackgrounds === 'function' && typeof RT !== 'undefined') {
+    updateBackgrounds(RT);
+  }
 </script>
 </body>
 </html>
