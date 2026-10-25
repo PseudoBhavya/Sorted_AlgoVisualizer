@@ -81,6 +81,11 @@ if os.path.exists(static_html_path):
         with open(vision_js_path, "r", encoding="utf-8") as vf:
             v_code = vf.read()
         stitch_html = stitch_html.replace("</head>", f"<script>\n{v_code}\n</script></head>")
+    grid_scan_path = os.path.join(os.path.dirname(static_html_path), "grid-scan.js")
+    if os.path.exists(grid_scan_path):
+        with open(grid_scan_path, "r", encoding="utf-8") as gf:
+            g_code = gf.read()
+        stitch_html = stitch_html.replace("</head>", f"<script>\n{g_code}\n</script></head>")
     components.html(stitch_html, height=1100, scrolling=True)
 else:
     st.error(f"Frontend bundle not found at {static_html_path}")

@@ -47,6 +47,10 @@ def create_app() -> Flask:
     def serve_vision_js():
         return send_from_directory(static_dir, 'vision.js')
 
+    @app.route('/grid-scan.js')
+    def serve_grid_scan_js():
+        return send_from_directory(static_dir, 'grid-scan.js')
+
     @app.route('/brain.png')
     @app.route('/static/brain.png')
     def serve_brain_png():

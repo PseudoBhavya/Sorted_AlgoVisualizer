@@ -12,6 +12,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/static/vision.js"></script>
 <script>window.CV||document.write('<script src="vision.js"><\/script>')</script>
+<script src="/static/grid-scan.js?v=2"></script>
+<script>window.createGridScan||document.write('<script src="grid-scan.js?v=2"><\/script>')</script>
 <style>
 :root{--bd:rgba(150,160,255,.14)}
 html{scroll-behavior:smooth;background:#070815}
@@ -25,11 +27,10 @@ input[type=range]{accent-color:#7c6cff;width:100%}
 h1,h2,h3{font-family:'Bricolage Grotesque',Geist,sans-serif;letter-spacing:-.025em;font-weight:700}
 :focus-visible{outline:2px solid #8f9bff;outline-offset:2px}
 #scene{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:none}
-.shape-waves{position:relative;width:100%;height:100%;overflow:hidden;pointer-events:none;isolation:isolate}
-.shape-waves__canvas{position:absolute;inset:0;display:block;width:100%;height:100%;opacity:0;transition:opacity 600ms cubic-bezier(.22,1,.36,1);pointer-events:none}
-.shape-waves[data-ready='true'] .shape-waves__canvas{opacity:1}
-@media(prefers-reduced-motion:reduce){.shape-waves__canvas{transition:none}}
-#bg-shapes{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:none;pointer-events:none;overflow:hidden}
+.grid-scan{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:none;pointer-events:none;overflow:hidden;background:#08060f}
+.grid-scan-canvas{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none}
+#bg-gridscan{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:none;pointer-events:none;overflow:hidden;background:#08060f}
+body:not([data-r=home]):before{display:none}
 #app{position:relative;z-index:1;padding-top:76px;min-height:100vh;display:flex;flex-direction:column}
 body[data-r=home] #app{padding-top:0}
 #app.vin>*{animation:vin .4s cubic-bezier(.2,.7,.2,1) both}
@@ -109,8 +110,8 @@ select,input:not([type=range]):not([type=checkbox]):not([type=file]){border-radi
 </head>
 <body class="bg-bg text-fg font-sans antialiased text-[13px]">
 <canvas id="scene" aria-hidden="true"></canvas>
-<div id="bg-shapes" class="shape-waves" aria-hidden="true">
-  <canvas class="shape-waves__canvas"></canvas>
+<div id="bg-gridscan" class="grid-scan" aria-hidden="true">
+  <canvas class="grid-scan-canvas" aria-hidden="true"></canvas>
 </div>
 
 <!-- Fixed Global Navbar -->
@@ -1868,50 +1869,46 @@ function scene(on) {
   SC.run();
 }
 
-let SHAPES = null;
+let GRIDSCAN = null;
 function updateBackgrounds(r) {
   const isHome = (r === 'home');
-  // 1. Landing 3D scene (Three.js with floating geometric meshes & sorting bars)
+  // 1. Landing 3D scene (Three.js with floating geometric meshes & sorting bars strictly for landing page)
   scene(isHome);
 
-  // 2. ShapeWaves background (STRICTLY for algorithm visualizer & image processing non-home pages)
-  const bg = $('#bg-shapes');
+  // 2. GridScan 3D Tunnel background (STRICTLY for all non-landing pages, matching exact customization)
+  const bg = $('#bg-gridscan');
   if (isHome) {
-    if (SHAPES) SHAPES.hide();
+    if (GRIDSCAN) GRIDSCAN.hide();
     else if (bg) bg.style.display = 'none';
   } else {
-    if (!SHAPES) {
-      const cv = bg ? bg.querySelector('.shape-waves__canvas') : null;
-      if (bg && cv && window.createShapeWaves) {
-        SHAPES = window.createShapeWaves(bg, cv, {
-          text: '</>',
-          fontFamily: 'Geist, "Geist Sans", system-ui, sans-serif',
-          fontWeight: 500,
-          textSize: 0.6,
-          shapes: 'mixed',
-          cellSize: 10,
-          dotSize: 0.75,
-          color: '#693aed',
-          hoverColor: '#83aeea',
-          backgroundColor: '#120f17',
-          speed: 1,
-          scale: 1,
-          contrast: 1,
-          brightness: 0.4,
-          flow: 0,
-          direction: 0,
-          fade: 0.25,
-          interactive: true,
-          splashRadius: 40,
-          splashStrength: 0.4,
-          glow: 0.35,
-          intro: true,
-          introDuration: 1.6,
-          paused: false
-        });
-      }
+    if (!GRIDSCAN && window.createGridScan && bg) {
+      GRIDSCAN = window.createGridScan(bg, {
+        linesColor: '#4d4757',
+        scanColor: '#7c3aed',
+        cells: 8,
+        lineThickness: 1,
+        lineStyle: 'solid',
+        depth: 3,
+        depthFade: 0.6,
+        parallax: 1,
+        shading: 0.7,
+        reflection: 0.35,
+        scanDirection: 'forward',
+        scanDuration: 2.4,
+        scanDelay: 1.6,
+        scanWidth: 1,
+        trail: 0.5,
+        glow: 0.6,
+        points: true,
+        autoScan: true,
+        interactive: true,
+        clickEffect: 'ping',
+        intro: true,
+        lightMode: false
+      });
+      window.GRID_SCAN = GRIDSCAN;
     }
-    if (SHAPES) SHAPES.show();
+    if (GRIDSCAN) GRIDSCAN.show();
     else if (bg) bg.style.display = 'block';
   }
 }
@@ -2133,9 +2130,7 @@ document.addEventListener('keydown', e => {
 window.addEventListener('hashchange', () => { const h = (location.hash.slice(1) || 'home').toLowerCase(); if (views[h] && h !== RT) route(h); });
 route();
 </script>
-<script type="module">
-  import { createShapeWaves } from '/static/shape-waves.js';
-  window.createShapeWaves = createShapeWaves;
+<script>
   if (typeof updateBackgrounds === 'function' && typeof RT !== 'undefined') {
     updateBackgrounds(RT);
   }
