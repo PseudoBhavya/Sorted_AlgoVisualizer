@@ -113,7 +113,7 @@ AlgorithmRegistry.register(BubbleSort)
 AlgorithmRegistry.register(BinarySearch)
 AlgorithmRegistry.register(LinearSearch)
 
-# Register DAA Fundamentals
+# Register Algorithmic Primitives
 AlgorithmRegistry.register(MinMaxLinear)
 AlgorithmRegistry.register(MinMaxDivideConquer)
 AlgorithmRegistry.register(DynamicArrayInsertion)

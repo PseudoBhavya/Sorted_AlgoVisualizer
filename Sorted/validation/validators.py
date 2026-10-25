@@ -1,8 +1,7 @@
 """
-AlgoLens Input Validation Engine
-================================
-Regex-based input parsing and validation.
-Covers Syllabus Unit on Regular Expressions (`re` module).
+Sorted Input Validation Engine
+==============================
+Regex-based input parsing, tokenization, and validation.
 Handles comma-separated, space-separated, bracketed array strings,
 floating point numbers, negative values, and search targets.
 """

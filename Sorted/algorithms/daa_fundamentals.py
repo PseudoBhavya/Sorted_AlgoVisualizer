@@ -1,7 +1,7 @@
 """
-Sorted — DAA MSE Fundamental Algorithms
-========================================
-Implements the core Design and Analysis of Algorithms (DAA) MSE curriculum:
+Sorted — Foundational Algorithmic Primitives
+============================================
+Implements foundational algorithms and computational primitives:
 - Min-Max (Linear & Divide-and-Conquer)
 - Dynamic Array Element Insertion
 - K-bit Binary Counter (Amortized Analysis)
@@ -27,7 +27,7 @@ class MinMaxLinear(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -156,7 +156,7 @@ class MinMaxDivideConquer(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -286,7 +286,7 @@ class DynamicArrayInsertion(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -409,7 +409,7 @@ class KBitCounter(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -540,7 +540,7 @@ class ClosestPairBruteForce(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -644,7 +644,7 @@ class ClosestPairDivideConquer(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -697,7 +697,7 @@ class MatrixMultiplicationStandard(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -793,7 +793,7 @@ class FibonacciIterative(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -893,7 +893,7 @@ class FibonacciRecursive(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:
@@ -994,7 +994,7 @@ class SumOfDigits(Algorithm):
 
     @property
     def category(self) -> str:
-        return "DAA Fundamentals"
+        return "Algorithmic Primitives"
 
     @property
     def description(self) -> str:

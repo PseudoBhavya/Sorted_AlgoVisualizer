@@ -1,15 +1,13 @@
 """
-AlgoLens Data Handlers
-======================
-Comprehensive file input/output handlers covering:
+Sorted Data Handlers & Serialization Engine
+===========================================
+Production file input/output handlers and serialization pipelines:
 - CSV (csv module and pandas)
 - JSON (json module)
 - XML (xml.etree.ElementTree)
 - Plain Text (TXT)
 - Binary Serialization (pickle / struct)
 - Trace Export (JSON, CSV summary)
-
-Demonstrates Syllabus Unit on File Handling, Serialization, and Data Formats.
 """
 
 import os

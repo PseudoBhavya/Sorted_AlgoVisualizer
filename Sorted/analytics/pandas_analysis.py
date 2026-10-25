@@ -1,8 +1,8 @@
 """
 Sorted Pandas Analytics Engine
 ==============================
-Statistical analysis, aggregation, and empirical benchmarking using Pandas.
-Covers Syllabus Unit 4 on Pandas DataFrames, Series, Groupby, Aggregations, and Pivots.
+Statistical analysis, aggregation, and empirical benchmarking using Pandas DataFrames,
+Series, GroupBy aggregations, and multidimensional pivot tables.
 """
 
 import time

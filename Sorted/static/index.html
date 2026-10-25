@@ -1,79 +1,172 @@
 <!DOCTYPE html>
 <html class="dark" lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sorted — "Look Inside the Algorithm"</title>
+<title>Sorted — Deterministic Simulation Engine for Algorithms &amp; Machine Vision</title>
+<meta name="description" content="Industrial-grade deterministic simulation platform for tracing memory registers, operational invariants, spatial kernel convolutions, and high-dimensional tensors.">
 <link rel="icon" type="image/png" href="brain.png">
 <link rel="shortcut icon" type="image/png" href="brain.png">
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Geist:wght@300..800&family=JetBrains+Mono:wght@400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={theme:{extend:{colors:{bg:'#0c1322',s0:'#070e1d',s1:'#141b2b',s2:'#191f2f',s3:'#232a3a',s4:'#2e3545',fg:'#dce2f7',mut:'#bcc9cd',ol:'#869397',olv:'#3d494c',pri:'#4cd7f6',pc:'#06b6d4',onpc:'#00424f',ter:'#ffb95f',err:'#ffb4ab',errc:'#93000a',sec:'#c0c1ff',ok:'#10B981'},fontFamily:{sans:['Geist','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
+<script>tailwind.config={theme:{extend:{colors:{bg:'#070815',s0:'#0a0c1c',s1:'#10132a',s2:'#171b38',s3:'#222747',s4:'#2f3560',fg:'#e8ebff',mut:'#a9afd0',ol:'#7a82ad',olv:'#3a4070',pri:'#6ea0ff',pc:'#6d5efc',onpc:'#ffffff',ter:'#fbbf24',err:'#fb7185',errc:'#9f1239',sec:'#b49bff',ok:'#34d399'},fontFamily:{sans:['Geist','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/static/vision.js"></script>
+<script>window.CV||document.write('<script src="vision.js"><\/script>')</script>
 <style>
-html, body { margin: 0 !important; padding: 0 !important; overflow-x: hidden; }
-body { font-variant-numeric: tabular-nums; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #070e1d; }
-::-webkit-scrollbar-thumb { background: #232a3a; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3d494c; }
-.ms { font-family:'Material Symbols Outlined'; font-size:18px; line-height:1; font-weight:400; font-style:normal; display:inline-block; vertical-align:middle; }
-input[type=range] { accent-color:#06b6d4; width:100%; }
-.b { transition: height .2s cubic-bezier(0.4, 0, 0.2, 1); }
+:root{--bd:rgba(150,160,255,.14)}
+html{scroll-behavior:smooth;background:#070815}
+html,body{margin:0!important;padding:0!important;overflow-x:hidden}
+body{min-height:100vh;font-family:Geist,system-ui,sans-serif;font-variant-numeric:tabular-nums;background:radial-gradient(900px 600px at 10% -5%,rgba(79,140,255,.2),transparent 60%),radial-gradient(800px 600px at 95% 8%,rgba(139,92,246,.2),transparent 60%),linear-gradient(#070815,#0a0c1c);background-attachment:fixed}
+body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(150,160,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(150,160,255,.045) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000,transparent 75%);mask-image:radial-gradient(ellipse at 50% 30%,#000,transparent 75%)}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:#070815}::-webkit-scrollbar-thumb{background:#2f3560;border-radius:4px}
+.ms{font-family:'Material Symbols Outlined';font-size:18px;line-height:1;font-weight:400;font-style:normal;display:inline-block;vertical-align:middle}
+input[type=range]{accent-color:#7c6cff;width:100%}
+.b{transition:height .2s cubic-bezier(.4,0,.2,1)}
+h1,h2,h3{font-family:'Bricolage Grotesque',Geist,sans-serif;letter-spacing:-.025em;font-weight:700}
+:focus-visible{outline:2px solid #8f9bff;outline-offset:2px}
+#scene{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:none}
+#app{position:relative;z-index:1;padding-top:76px;min-height:100vh;display:flex;flex-direction:column}
+body[data-r=home] #app{padding-top:0}
+#app.vin>*{animation:vin .4s cubic-bezier(.2,.7,.2,1) both}
+@keyframes vin{from{opacity:0;transform:translateY(10px)}}
+#app>div[class*=max-w]{max-width:1280px!important;padding:20px 24px 56px!important;flex:1 0 auto}
+
+/* Fixed Global Navbar (Almost-black, deep dark purple with subtle glass effects) */
+#fn{position:fixed;top:0;left:0;right:0;width:100%;height:64px;z-index:100;background:rgba(9,7,20,.88);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(140,120,240,.12);box-shadow:0 4px 24px -2px rgba(0,0,0,.6);display:flex;align-items:center}
+.nav-wrap{max-width:1320px;width:100%;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;background:none;border:0;cursor:pointer;color:#fff;font:700 20px 'Bricolage Grotesque',Geist,sans-serif;letter-spacing:-.02em;padding:0}
+#nav{display:flex;align-items:center;gap:6px}
+.nl{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;border:0;cursor:pointer;white-space:nowrap;font-size:13.5px;font-weight:500;color:#9ba3cb;background:transparent;transition:all .2s cubic-bezier(.2,.8,.2,1)}
+.nl:hover{color:#fff;background:rgba(255,255,255,.05)}
+.nl.on{color:#fff;font-weight:600;background:rgba(124,92,255,.16);box-shadow:inset 0 0 0 1px rgba(150,130,255,.28)}
+.nav-actions{display:flex;align-items:center;gap:10px}
+.nav-cta{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:9px;border:1px solid rgba(160,140,255,.3);cursor:pointer;font:600 13px Geist,sans-serif;color:#fff;background:linear-gradient(135deg,rgba(99,102,241,.9),rgba(139,92,246,.9));box-shadow:0 4px 16px -2px rgba(110,100,255,.4);transition:all .2s}
+.nav-cta:hover{transform:translateY(-1px);background:linear-gradient(135deg,rgba(99,102,241,1),rgba(139,92,246,1));box-shadow:0 6px 20px -2px rgba(110,100,255,.6)}
+
+@media(max-width:960px){.nav-cta{display:none}.nl span:last-child{display:none}.nl.on span:last-child{display:inline}.nl{padding:8px 11px}}
+@media(max-width:640px){.brand span{display:none}.nav-wrap{padding:0 16px}}
+
+/* Section Sub-Navigation */
+.subnav{display:flex;gap:5px;padding:4px;max-width:100%;overflow-x:auto;border-radius:12px;background:rgba(12,10,26,.7);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(140,120,240,.12);box-shadow:0 8px 24px -8px rgba(0,0,0,.5)}
+.sn{display:flex;align-items:center;padding:7px 16px;border-radius:8px;border:0;cursor:pointer;white-space:nowrap;font-size:13px;font-weight:500;color:#9ba3cb;background:transparent;transition:color .2s,background .2s,box-shadow .2s}
+.sn:hover{color:#fff;background:rgba(255,255,255,.05)}
+.sn.on{color:#fff;font-weight:600;background:rgba(124,92,255,.2);box-shadow:inset 0 0 0 1px rgba(150,130,255,.35)}
+
+/* Professional Deep Dark-Purple Footer on Every Page */
+.site-footer{width:100%;margin-top:auto;background:rgba(9,7,20,.95);border-top:1px solid rgba(140,120,240,.12);padding:48px 24px 32px;position:relative;z-index:10}
+.footer-in{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+.footer-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:32px}
+.footer-brand{max-width:380px}
+.footer-links{display:flex;flex-wrap:wrap;gap:44px}
+.footer-col{display:flex;flex-direction:column;gap:11px}
+.footer-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff}
+.footer-col button{background:none;border:0;padding:0;text-align:left;font-size:13px;color:#9ba3cb;cursor:pointer;transition:color .2s}
+.footer-col button:hover{color:#fff}
+.footer-bottom{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;padding-top:20px;border-top:1px solid rgba(140,120,240,.08)}
+
+/* Restyle Existing Panels and Controls */
+body [class*=rounded-xl].bg-s0,body [class*=rounded-xl].bg-s1{border-radius:20px;border-color:var(--bd);background:linear-gradient(180deg,rgba(24,28,62,.55),rgba(12,14,34,.55));-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 10px 30px -18px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.04)}
+body .bg-pc{background-image:linear-gradient(135deg,#4f8cff,#7c5cff);color:#fff}
+body button{transition:background .2s,color .2s,transform .15s,box-shadow .2s,border-color .2s}
+body button:active{transform:scale(.97)}
+body .uppercase{text-transform:none}
+body .tracking-wider{letter-spacing:.01em}
+select,input:not([type=range]):not([type=checkbox]):not([type=file]){border-radius:10px}
+
+/* Production Landing */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:120px 24px 90px}
+.hero:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 70% at 22% 50%,rgba(7,8,21,.82),transparent 70%)}
+.hero-in{position:relative;max-width:1180px;width:100%;margin:0 auto}
+.hero h1{font-size:clamp(2.8rem,7.5vw,5.8rem);line-height:1.02;font-weight:700;letter-spacing:-.04em;max-width:14ch;color:#f4f5ff;text-wrap:balance}
+.hero p{margin-top:24px;max-width:38rem;font-size:clamp(1rem,1.5vw,1.18rem);line-height:1.6;color:#aeb4d6}
+.cta{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:18px;border:1px solid transparent;cursor:pointer;font:600 15px Geist,sans-serif;color:#fff;transition:transform .2s,box-shadow .25s,background .25s,border-color .25s}
+.cta .ms{font-size:22px}
+.cta-pri{background:linear-gradient(135deg,#4f8cff,#7c5cff 60%,#a05cff);box-shadow:0 14px 44px -10px rgba(110,100,255,.85),inset 0 1px 0 rgba(255,255,255,.25)}
+.cta-pri:hover{transform:translateY(-2px);box-shadow:0 18px 56px -8px rgba(124,108,255,1),inset 0 1px 0 rgba(255,255,255,.3)}
+.cta-gl{background:rgba(255,255,255,.06);border-color:rgba(170,180,255,.28);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.cta-gl:hover{transform:translateY(-2px);background:rgba(255,255,255,.1);border-color:rgba(190,170,255,.55);box-shadow:0 14px 40px -14px rgba(160,100,255,.7)}
+.cue{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--bd);background:rgba(255,255,255,.05);color:#a9afd0;cursor:pointer}
+.cue:hover{color:#fff;background:rgba(255,255,255,.1)}
+.ws{padding:30px 24px 70px}
+.ws-in{max-width:1180px;margin:0 auto;display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}
+.wc{display:flex;flex-direction:column;gap:18px;padding:32px;border-radius:28px;border:1px solid var(--bd);background:linear-gradient(160deg,rgba(26,30,70,.6),rgba(10,12,30,.72));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transition:border-color .3s,transform .3s}
+.wc:hover{border-color:rgba(150,140,255,.45);transform:translateY(-3px)}
+.wc h2{font-size:2.1rem;font-weight:700;letter-spacing:-.03em;color:#f4f5ff}
+.wc ul{list-style:none;margin:0;padding:0;display:grid;gap:11px;color:#c3c8e6;font-size:14px}
+.wc li{display:flex;align-items:center;gap:10px}.wc li .ms{color:#8f9bff}
+.viz{height:130px;display:flex;align-items:flex-end;gap:6px;padding:14px;border-radius:18px;background:rgba(5,6,18,.55);border:1px solid var(--bd)}
+.viz i{flex:1;border-radius:6px 6px 2px 2px;background:linear-gradient(#8f7bff,#4f8cff);opacity:.85}
+.pxg{height:130px;display:grid;grid-template-columns:repeat(16,1fr);grid-template-rows:repeat(5,1fr);gap:3px;padding:14px;border-radius:18px;background:rgba(5,6,18,.55);border:1px solid var(--bd)}
+.pxg i{border-radius:3px;background:#8f9bff}
+.ft{padding:36px 24px 52px;text-align:center;color:#7a82ad;font-size:13px;border-top:1px solid var(--bd)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body class="bg-bg text-fg font-sans antialiased text-[13px]">
-<header class="fixed top-0 inset-x-0 z-50 bg-s0/95 backdrop-blur border-b border-s3/40 m-0 p-0">
-<div class="h-16 px-4 flex items-center justify-between gap-3">
-<button type="button" onclick="navTo('visualize', event)" class="flex items-center gap-2 shrink-0 cursor-pointer bg-transparent border-0 p-0 text-left">
-  <svg width="28" height="28" viewBox="0 0 28 28">
-    <rect x="3" y="14" width="5" height="11" fill="#4cd7f6"/>
-    <rect x="11" y="6" width="5" height="19" fill="#06b6d4"/>
-    <rect x="19" y="10" width="5" height="15" fill="#ffb95f"/>
-  </svg>
-  <span class="text-lg font-medium tracking-tight">Sorted</span>
-  <span class="px-1.5 rounded bg-s3 text-pri text-[10px] font-mono uppercase font-bold">IDE v3.12</span>
-</button>
-<nav id="nav" class="flex gap-1.5 overflow-x-auto text-xs font-mono"></nav>
-<div class="hidden lg:flex items-center gap-2 bg-s1 px-3 py-1.5 rounded-lg text-[11px] font-mono shrink-0">
-  <span class="w-2 h-2 rounded-full bg-pc animate-pulse"></span>
-  <span class="text-mut">Flask API / Ready</span>
-  <span class="text-olv">|</span>
-  <span class="text-pri">Py 3.12</span>
-  <span class="text-olv">|</span>
-  <span id="ms" class="text-ter">0 steps</span>
-</div>
-</div>
-<div id="crumb" class="h-10 px-4 bg-s1 flex items-center gap-2 text-xs font-mono overflow-x-auto whitespace-nowrap border-b border-s3/30"></div>
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<!-- Fixed Global Navbar -->
+<header id="fn">
+  <div class="nav-wrap">
+    <button type="button" class="brand" onclick="navTo('home', event)" aria-label="Sorted Home">
+      <svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#7c5cff"/>
+            <stop offset="1" stop-color="#4f8cff"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="14" width="5" height="11" rx="1.5" fill="url(#lg)"/>
+        <rect x="11" y="5" width="5" height="20" rx="1.5" fill="url(#lg)"/>
+        <rect x="19" y="10" width="5" height="15" rx="1.5" fill="url(#lg)"/>
+      </svg>
+      <span>Sorted</span>
+    </button>
+
+    <!-- Center Navigation Links -->
+    <nav id="nav" aria-label="Primary Navigation"></nav>
+
+    <!-- Right Actions -->
+    <div class="nav-actions">
+      <button type="button" onclick="navTo('visualize', event)" class="nav-cta">
+        <span>Launch Studio</span>
+        <span class="ms" style="font-size:16px">arrow_forward</span>
+      </button>
+    </div>
+  </div>
 </header>
-<main id="app" class="pt-[104px] w-full min-h-screen"></main>
+
+<main id="app"></main>
 
 <script>
 const $ = s => document.querySelector(s), rnd = n => Math.floor(Math.random() * n);
 
 const NAV = [
-  ['visualize', 'Visualize', 'play_circle'],
-  ['algorithms', 'Algorithms', 'account_tree'],
-  ['compare', 'Compare', 'splitscreen'],
-  ['history', 'History', 'history'],
-  ['datasets', 'Datasets', 'data_array'],
-  ['about', 'About', 'terminal']
+  ['home', 'Overview', 'dashboard', 'home'],
+  ['visualize', 'Algorithm Studio', 'terminal', 'algo'],
+  ['vision', 'Vision Studio', 'auto_awesome', 'vision'],
+  ['compare', 'Benchmark Arena', 'splitscreen', 'compare'],
+  ['about', 'Architecture & Docs', 'menu_book', 'about']
 ];
 
 const META = {
   quick: { n:'Quick Sort', cat:'Sorting', f:'Divide & Conquer', tg:['In-Place','Unstable'], d:'Partition-exchange sort: picks a pivot, partitions around it (Hoare dual-pointer or Lomuto single-pointer), then recurses on both slices.', avg:'O(n log n)', w:'O(n²)', sp:'O(log n)' },
   merge: { n:'Merge Sort', cat:'Sorting', f:'Divide & Conquer', tg:['Stable','Out-of-Place'], d:'Recursively halves the array, then merges sorted halves through an auxiliary buffer.', avg:'O(n log n)', w:'O(n log n)', sp:'O(n)' },
-  heap: { n:'Heap Sort', cat:'Sorting', f:'Selection', tg:['In-Place','Unstable'], d:'Builds a max-heap, then repeatedly moves the maximum element to the end and sifts down.', avg:'O(n log n)', w:'O(n²)', sp:'O(1)' },
+  heap: { n:'Heap Sort', cat:'Sorting', f:'Selection', tg:['In-Place','Unstable'], d:'Builds a max-heap, then repeatedly moves the maximum element to the end and sifts down.', avg:'O(n log n)', w:'O(n log n)', sp:'O(1)' },
   bubble: { n:'Bubble Sort', cat:'Sorting', f:'Exchange', tg:['In-Place','Stable'], d:'Repeatedly swaps adjacent out-of-order elements until the array is fully sorted.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
   insertion: { n:'Insertion Sort', cat:'Sorting', f:'Insertion', tg:['In-Place','Stable'], d:'Grows a sorted prefix by inserting each element into its correct position.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
   selection: { n:'Selection Sort', cat:'Sorting', f:'Selection', tg:['In-Place','Unstable'], d:'Repeatedly selects the minimum of the unsorted part and swaps it to the front.', avg:'O(n²)', w:'O(n²)', sp:'O(1)' },
   binary: { n:'Binary Search', cat:'Searching', f:'Divide & Conquer', t:'search', tg:['Searching','Sorted input'], d:'Logarithmic interval halving with lo/mid/hi pointers over a sorted array.', avg:'O(log n)', w:'O(log n)', sp:'O(1)', lg:[['Mid','text-pri'],['Found','text-ter'],['Out of range','text-ol']] },
   linear: { n:'Linear Search', cat:'Searching', f:'Sequential', t:'search', tg:['Searching','Simple'], d:'Sequentially inspects every item in the list until target match is found.', avg:'O(n)', w:'O(n)', sp:'O(1)' },
 
-  minmax_lin: { n:'Min-Max (Linear)', cat:'DAA Fundamentals', f:'Linear Scan', tg:['Linear','3n/2 Comparisons'], d:'Finds minimum and maximum elements in an array using a single linear scan in 3n/2 comparisons.', avg:'O(n)', w:'O(n)', sp:'O(1)', lg:[['Min','text-pri'],['Max','text-ter'],['Current','text-err']] },
-  minmax_dc: { n:'Min-Max (Divide & Conquer)', cat:'DAA Fundamentals', f:'Divide & Conquer', tg:['Divide & Conquer','Recursive'], d:'Recursively divides array into halves and combines local min/max results.', avg:'O(n)', w:'O(n)', sp:'O(log n)', lg:[['Range','text-pri'],['Min','text-ter'],['Max','text-ok']] },
-  dyn_insert: { n:'Dynamic Array Insertion', cat:'DAA Fundamentals', f:'Dynamic Array', tg:['Array Shift','Capacity'], d:'Shifts elements right step-by-step to insert a new element at a target index.', avg:'O(n)', w:'O(n)', sp:'O(1)', lg:[['Target','text-ter'],['Shifted','text-pri'],['Inserted','text-ok']] },
-  kbit_cnt: { n:'K-bit Counter', cat:'DAA Fundamentals', f:'Amortized Analysis', tg:['Binary Counter','Amortized O(1)'], d:'Simulates a K-bit binary counter demonstrating aggregate and amortized O(1) cost per increment.', avg:'O(1) amortized', w:'O(k)', sp:'O(k)', lg:[['Bit 1','text-pri'],['Flipped 0','text-ter'],['Carry','text-err']] },
-  closest_pair: { n:'Closest Pair of Points', cat:'DAA Fundamentals', f:'Divide & Conquer', tg:['2D Geometry','Divide & Conquer'], d:'Finds closest pair among 2D points using brute-force O(n²) or divide-and-conquer O(n log n).', avg:'O(n log n)', w:'O(n²)', sp:'O(n)', lg:[['Current Pair','text-ter'],['Best Pair','text-ok'],['Min Dist','text-pri']] },
-  mat_mult: { n:'Matrix Multiplication', cat:'DAA Fundamentals', f:'Iterative / D&C', t:'dp', tg:['Linear Algebra','Triply Nested Loop'], d:'Computes matrix product C[i][j] = sum(A[i][k]*B[k][j]) with step-by-step partial sums.', avg:'O(n³)', w:'O(n³)', sp:'O(n²)', lg:[['Cell i,j','text-ter'],['A[i][k]','text-pri'],['B[k][j]','text-sec']] },
-  fibonacci: { n:'Fibonacci', cat:'DAA Fundamentals', f:'Recursion / DP', tg:['Recursive','Iterative / DP'], d:'Computes nth Fibonacci number highlighting call trees, memoization, and iterative loops.', avg:'O(n)', w:'O(2ⁿ)', sp:'O(n)', lg:[['F(i-2)','text-sec'],['F(i-1)','text-pri'],['F(i)','text-ok']] },
-  sum_digits: { n:'Sum of Digits', cat:'DAA Fundamentals', f:'Arithmetic', tg:['Digit Extraction','Modulo 10'], d:'Extracts digits using modulo 10 and accumulates a running total.', avg:'O(log₁₀ n)', w:'O(log₁₀ n)', sp:'O(1)', lg:[['Current digit','text-ter'],['Running sum','text-ok']] },
+  minmax_lin: { n:'Min-Max (Linear)', cat:'Algorithmic Primitives', f:'Linear Scan', tg:['Linear','3n/2 Comparisons'], d:'Finds minimum and maximum elements in an array using a single linear scan in 3n/2 comparisons.', avg:'O(n)', w:'O(n)', sp:'O(1)', lg:[['Min','text-pri'],['Max','text-ter'],['Current','text-err']] },
+  minmax_dc: { n:'Min-Max (Divide & Conquer)', cat:'Algorithmic Primitives', f:'Divide & Conquer', tg:['Divide & Conquer','Recursive'], d:'Recursively divides array into halves and combines local min/max results.', avg:'O(n)', w:'O(n)', sp:'O(log n)', lg:[['Range','text-pri'],['Min','text-ter'],['Max','text-ok']] },
+  dyn_insert: { n:'Dynamic Array Insertion', cat:'Algorithmic Primitives', f:'Dynamic Array', tg:['Array Shift','Capacity'], d:'Shifts elements right step-by-step to insert a new element at a target index.', avg:'O(n)', w:'O(n)', sp:'O(1)', lg:[['Target','text-ter'],['Shifted','text-pri'],['Inserted','text-ok']] },
+  kbit_cnt: { n:'K-bit Counter', cat:'Algorithmic Primitives', f:'Amortized Analysis', tg:['Binary Counter','Amortized O(1)'], d:'Simulates a K-bit binary counter demonstrating aggregate and amortized O(1) cost per increment.', avg:'O(1) amortized', w:'O(k)', sp:'O(k)', lg:[['Bit 1','text-pri'],['Flipped 0','text-ter'],['Carry','text-err']] },
+  closest_pair: { n:'Closest Pair of Points', cat:'Algorithmic Primitives', f:'Divide & Conquer', tg:['2D Geometry','Divide & Conquer'], d:'Finds closest pair among 2D points using brute-force O(n²) or divide-and-conquer O(n log n).', avg:'O(n log n)', w:'O(n²)', sp:'O(n)', lg:[['Current Pair','text-ter'],['Best Pair','text-ok'],['Min Dist','text-pri']] },
+  mat_mult: { n:'Matrix Multiplication', cat:'Algorithmic Primitives', f:'Iterative / D&C', t:'dp', tg:['Linear Algebra','Triply Nested Loop'], d:'Computes matrix product C[i][j] = sum(A[i][k]*B[k][j]) with step-by-step partial sums.', avg:'O(n³)', w:'O(n³)', sp:'O(n²)', lg:[['Cell i,j','text-ter'],['A[i][k]','text-pri'],['B[k][j]','text-sec']] },
+  fibonacci: { n:'Fibonacci', cat:'Algorithmic Primitives', f:'Recursion / DP', tg:['Recursive','Iterative / DP'], d:'Computes nth Fibonacci number highlighting call trees, memoization, and iterative loops.', avg:'O(n)', w:'O(2ⁿ)', sp:'O(n)', lg:[['F(i-2)','text-sec'],['F(i-1)','text-pri'],['F(i)','text-ok']] },
+  sum_digits: { n:'Sum of Digits', cat:'Algorithmic Primitives', f:'Arithmetic', tg:['Digit Extraction','Modulo 10'], d:'Extracts digits using modulo 10 and accumulates a running total.', avg:'O(log₁₀ n)', w:'O(log₁₀ n)', sp:'O(1)', lg:[['Current digit','text-ter'],['Running sum','text-ok']] },
 
   dijkstra: { n:"Dijkstra's Shortest Path", cat:'Graph Theory', f:'Greedy', t:'graph', tg:['Graph Theory','Optimal'], d:'Single-source shortest paths on non-negative weighted graphs via greedy edge relaxation.', avg:'O(V²)', w:'O(V²)', sp:'O(V)', lg:[['Current','text-ter'],['Visited','text-pri'],['Relaxed edge','text-err'],['Shortest path','text-ok']] },
   astar: { n:'A* Pathfinding', cat:'Heuristic Search', f:'Heuristic Search', t:'grid', tg:['Spatial Grid','Informed'], d:'Informed search expanding lowest f(n)=g(n)+h(n) grid cell using Manhattan distance heuristic.', avg:'O(b^d)', w:'O(b^d)', sp:'O(b^d)', lg:[['Current','text-ter'],['Open set','text-pri'],['Closed set','text-sec'],['Path','text-ok']] },
@@ -303,7 +396,6 @@ const CODE = {
     '    return dp[n][W]  # backtrack optimal items'
   ]
 };
-
 
 // ---- Graph & Grid constants ----
 const GN = [['S',40,150],['A',160,45],['B',160,255],['C',300,45],['D',300,255],['E',440,100],['T',520,200]];
@@ -794,9 +886,9 @@ const ALG = {
 function gen(al, arr) {
   S = []; TR = []; STK = []; C = W = 0;
   const a = (arr || []).slice(), t = META[al].t;
-  if (!t) R(a, { l: 0, m: 'Initial array buffer loaded.' });
+  if (!t) R(a, { l: 0, m: 'Initial array buffer loaded into execution registers.' });
   ALG[al](a);
-  if (!t) R(a, { sd: 1, l: 0, m: 'Array fully sorted ✔ Invariant verified.' });
+  if (!t) R(a, { sd: 1, l: 0, m: 'Array fully sorted ✔ Invariant successfully verified.' });
   S.T = TR;
   return S;
 }
@@ -871,7 +963,7 @@ const V = {
 };
 const CP = { a: 'quick', b: 'merge', arr: mk('rand', 20), i: 0, SA: [], SB: [], sp: 1 };
 const DS = { k: 'rand', n: 16, arr: mk('rand', 16) };
-let P = false, T = null, RT = 'visualize', FIL = 'All', HIST = [];
+let P = false, T = null, RT = '', FIL = 'All', HIST = [];
 try { HIST = JSON.parse(localStorage.av || '[]'); } catch (e) {}
 
 const ldV = () => {
@@ -983,15 +1075,15 @@ const graphSvg = s => {
   return `<svg viewBox="0 0 560 300" class="w-full h-64 bg-s1 rounded-xl p-2">
     ${GE.map(([a, b], k) => {
       const A = GN[a], B = GN[b];
-      const c = pe.has([a, b].sort().join()) ? '#10B981' : s.k === k ? (s.rel ? '#ffb4ab' : '#4cd7f6') : '#3d494c';
+      const c = pe.has([a, b].sort().join()) ? '#10B981' : s.k === k ? (s.rel ? '#fb7185' : '#6ea0ff') : '#3a4070';
       return `<line x1="${A[1]}" y1="${A[2]}" x2="${B[1]}" y2="${B[2]}" stroke="${c}" stroke-width="${pe.has([a, b].sort().join()) ? 4 : 2.5}"/>
-      <text x="${(A[1] + B[1]) / 2}" y="${(A[2] + B[2]) / 2 - 6}" fill="#bcc9cd" font-size="11" text-anchor="middle" font-family="JetBrains Mono">${V.gw[k]}</text>`;
+      <text x="${(A[1] + B[1]) / 2}" y="${(A[2] + B[2]) / 2 - 6}" fill="#a9afd0" font-size="11" text-anchor="middle" font-family="JetBrains Mono">${V.gw[k]}</text>`;
     }).join('')}
     ${GN.map((n, i) => {
-      const c = P.includes(i) ? '#10B981' : s.u === i ? '#ffb95f' : s.vis && s.vis[i] ? '#06b6d4' : '#869397';
-      return `<circle cx="${n[1]}" cy="${n[2]}" r="18" fill="#141b2b" stroke="${c}" stroke-width="3"/>
-      <text x="${n[1]}" y="${n[2] + 4}" fill="#dce2f7" font-size="13" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">${n[0]}</text>
-      <text x="${n[1]}" y="${n[2] + 34}" fill="#4cd7f6" font-size="10" text-anchor="middle" font-family="JetBrains Mono">${s.d && s.d[i] < 1/0 ? s.d[i] : '∞'}</text>`;
+      const c = P.includes(i) ? '#10B981' : s.u === i ? '#fbbf24' : s.vis && s.vis[i] ? '#7c6cff' : '#7a82ad';
+      return `<circle cx="${n[1]}" cy="${n[2]}" r="18" fill="#10132a" stroke="${c}" stroke-width="3"/>
+      <text x="${n[1]}" y="${n[2] + 4}" fill="#e8ebff" font-size="13" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">${n[0]}</text>
+      <text x="${n[1]}" y="${n[2] + 34}" fill="#6ea0ff" font-size="10" text-anchor="middle" font-family="JetBrains Mono">${s.d && s.d[i] < 1/0 ? s.d[i] : '∞'}</text>`;
     }).join('')}
   </svg>`;
 };
@@ -1042,7 +1134,7 @@ const tabs = () => {
     ${[
       ['bars', 'bar_chart', 'Bars & Pointers'],
       ['matrix', 'grid_4x4', 'Matrix View'],
-      ['mem', 'memory', 'Memory Cells']
+      ['mem', 'memory', 'Memory Registers']
     ].map(([k, i, t]) => `
       <button data-a="view" data-v="${k}" class="px-2.5 py-1 rounded-lg font-mono text-xs flex items-center gap-1.5 transition-colors ${V.view == k ? 'bg-pc text-onpc font-semibold shadow-sm' : 'bg-s1 text-mut hover:text-fg'}">
         <span class="ms text-[16px]">${i}</span><span>${t}</span>
@@ -1069,10 +1161,10 @@ const views = {
         <!-- 1. Graph / Simulation Stage -->
         <div class="rounded-xl bg-s0 p-4 border border-s3 shadow-sm flex flex-col gap-3">
           <div class="flex items-center justify-between border-b border-s3/40 pb-2">
-            <span class="text-xs font-mono uppercase tracking-wider text-fg font-semibold flex items-center gap-1.5">
-              <span class="ms text-pri text-[18px]">bar_chart</span>
-              Graph / Algorithm Simulation
-            </span>
+            <h2 class="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+              <span class="ms text-pri text-[18px]">terminal</span>
+              Runtime Execution Deck &amp; State Machine
+            </h2>
             <div id="strat"></div>
           </div>
           <div id="stage"></div>
@@ -1082,17 +1174,10 @@ const views = {
         <!-- 2. Configuration Card -->
         <div class="rounded-xl bg-s0 p-4 border border-s3 shadow-sm flex flex-col gap-3">
           <div class="flex items-center justify-between border-b border-s3/40 pb-2">
-            <div class="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-fg font-semibold">
+            <h2 class="text-sm font-bold text-white tracking-tight flex items-center gap-2">
               <span class="ms text-pri text-[18px]">tune</span>
-              Configuration & Inputs
-            </div>
-            <!-- Audio cues toggle -->
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-mono text-mut flex items-center gap-1"><span class="ms text-ter text-[16px]">graphic_eq</span>Audio Cues</span>
-              <button data-a="audio" id="au" class="w-9 h-5 rounded-full p-0.5 flex cursor-pointer transition-colors ${AU.on ? 'bg-ter justify-end' : 'bg-s4'}">
-                <span class="w-4 h-4 rounded-full bg-fg block"></span>
-              </button>
-            </div>
+              Runtime Parameters &amp; Buffer Control
+            </h2>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -1118,13 +1203,13 @@ const views = {
 
       <!-- RIGHT COLUMN: Python Source Tracker + Execution State -->
       <div class="flex flex-col gap-3.5">
-        <!-- 1. Python Source Tracker (Prominent at top of right column) -->
+        <!-- 1. Python Source Tracker -->
         <div id="code" class="rounded-xl bg-s0 p-4 border border-s3 shadow-sm flex flex-col"></div>
 
         <!-- 2. Execution State -->
         <div id="state" class="rounded-xl bg-s0 p-4 border border-s3 shadow-sm"></div>
 
-        <!-- 3. Why this step? -->
+        <!-- 3. Invariant Logic Analysis -->
         <div id="why" class="h-[104px] min-h-[104px] max-h-[104px] shrink-0 rounded-xl bg-s1 border border-s3 p-3.5 flex flex-col box-border overflow-hidden shadow-sm"></div>
       </div>
     </div>
@@ -1137,18 +1222,22 @@ const views = {
   algorithms() {
     const L = Object.entries(META).filter(([k, m]) => FIL == 'All' || m.f == FIL || m.cat == FIL || m.tg.includes(FIL));
     const q = ($('#q') || {}).value || '';
-    return `<div class="p-5 max-w-6xl mx-auto flex flex-col gap-4">
-    <div>
-      <div class="text-[10px] font-mono uppercase text-ol">Computational Registry // Standard Lib v3.12</div>
-      <h1 class="text-3xl font-semibold tracking-tight">Algorithm Library & Execution Catalog</h1>
-      <p class="text-mut">Inspect asymptotic complexities, invariants, and launch any algorithm directly into the interactive workspace.</p>
+    return `<div class="p-5 max-w-6xl mx-auto flex flex-col gap-5">
+    <div class="pb-2 border-b border-s3/40">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+        <span class="ms text-pri text-[28px]">category</span>
+        Algorithm Directory &amp; Complexity Catalog
+      </h1>
+      <p class="text-sm text-[#b0b8db] pt-1.5 max-w-3xl leading-relaxed">
+        Inspect asymptotic time and space complexity bounds, execution invariants, and launch any solver directly into the runtime simulator.
+      </p>
     </div>
     <div class="flex flex-wrap gap-2 items-center">
       <div class="flex items-center gap-2 bg-s1 rounded-lg px-3 py-2 flex-1 min-w-[240px]">
         <span class="ms text-ol">search</span>
-        <input id="q" value="${q}" placeholder="Filter by name, complexity, or paradigm (e.g. quick, O(n log n), Dijkstra, knapsack)…" class="bg-transparent w-full font-mono text-xs focus:outline-none">
+        <input id="q" value="${q}" placeholder="Filter by solver name, complexity O(n log n), paradigm, or tags…" class="bg-transparent w-full font-mono text-xs focus:outline-none">
       </div>
-      ${['All', 'Sorting', 'Searching', 'Graph Theory', 'Heuristic Search', 'Dynamic Programming', 'Divide & Conquer', 'In-Place', 'Stable'].map(f => `<button data-a="fil" data-v="${f}" class="${seg(f == FIL)}">${f}</button>`).join('')}
+      ${['All', 'Sorting', 'Searching', 'Graph Theory', 'Heuristic Search', 'Dynamic Programming', 'Divide & Conquer', 'Algorithmic Primitives', 'In-Place', 'Stable'].map(f => `<button data-a="fil" data-v="${f}" class="${seg(f == FIL)}">${f}</button>`).join('')}
     </div>
     <div class="grid md:grid-cols-2 gap-3.5">
       ${L.filter(([k, m]) => (m.n + m.avg + m.w + m.f + m.cat + m.tg.join(' ')).toLowerCase().includes(q.toLowerCase())).map(([k, m]) => `
@@ -1159,8 +1248,8 @@ const views = {
               <span class="px-2 py-0.5 rounded bg-s3 text-pri text-[10px] font-mono">${m.f}</span>
               ${m.tg.map(t => `<span class="px-2 py-0.5 rounded bg-s2 text-ol text-[10px] font-mono">${t}</span>`).join('')}
             </div>
-            <h2 class="text-2xl font-semibold tracking-tight">${m.n}</h2>
-            <p class="text-mut leading-relaxed text-xs">${m.d}</p>
+            <h2 class="text-xl font-bold tracking-tight text-white">${m.n}</h2>
+            <p class="text-[#b0b8db] leading-relaxed text-xs">${m.d}</p>
           </div>
           <div class="grid grid-cols-3 gap-2 font-mono text-xs pt-1">
             <div class="bg-s0 rounded p-2 border border-s3/40"><div class="text-[10px] text-ol">Avg Time</div><div class="text-pri font-bold">${m.avg}</div></div>
@@ -1168,8 +1257,8 @@ const views = {
             <div class="bg-s0 rounded p-2 border border-s3/40"><div class="text-[10px] text-ol">Space</div><div class="text-fg font-bold">${m.sp}</div></div>
           </div>
           <div class="flex gap-2 justify-end pt-2 border-t border-s3/40">
-            ${m.t ? '' : `<button data-a="cmpAdd" data-v="${k}" class="${sec}">Add to Compare</button>`}
-            <button data-a="launch" data-v="${k}" class="${pri}">Launch Visualizer →</button>
+            ${m.t ? '' : `<button data-a="cmpAdd" data-v="${k}" class="${sec}">Add to Arena</button>`}
+            <button data-a="launch" data-v="${k}" class="${pri}">Launch in Studio →</button>
           </div>
         </div>`).join('') || '<div class="text-ol py-8 text-center col-span-2">No algorithms matched your filter criteria.</div>'}
     </div>
@@ -1177,19 +1266,28 @@ const views = {
   },
 
   compare() {
-    return `<div class="p-4 max-w-6xl mx-auto flex flex-col gap-4">
+    return `<div class="p-4 max-w-6xl mx-auto flex flex-col gap-5">
+    <div class="pb-2 border-b border-s3/40">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+        <span class="ms text-pri text-[28px]">splitscreen</span>
+        Differential Benchmark Arena
+      </h1>
+      <p class="text-sm text-[#b0b8db] pt-1.5 max-w-3xl leading-relaxed">
+        Compare two algorithms concurrently against identical input arrays to analyze comparisons, pointer swaps, and performance deltas.
+      </p>
+    </div>
     <div class="bg-s1 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 border border-s3">
       <div class="flex items-center gap-2">
-        <span class="ms text-pri text-[22px]">splitscreen</span>
-        <span class="font-mono text-sm font-semibold">Benchmark Arena (N=${CP.arr.length})</span>
+        <span class="ms text-pri text-[22px]">compare_arrows</span>
+        <span class="font-mono text-sm font-bold text-white">Execution Setup (N=${CP.arr.length})</span>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        ${[['rand', 'Uniform Random'], ['nearly', 'Nearly Sorted'], ['rev', 'Reversed'], ['few', 'High Duplication']].map(([k, t]) => `
+        ${[['rand', 'Uniform Random'], ['nearly', 'Nearly Sorted'], ['rev', 'Reversed (Worst Case)'], ['few', 'High Duplication']].map(([k, t]) => `
           <button data-a="cpre" data-v="${k}" class="${sec} text-xs">${t}</button>`).join('')}
       </div>
       <div class="flex items-center gap-2">
         <select id="cA" class="bg-s3 rounded-lg px-2.5 py-1.5 font-mono text-xs border border-s4">${opts(CP.a, 1)}</select>
-        <span class="text-ol font-mono text-xs">VS</span>
+        <span class="text-ol font-mono text-xs font-bold">VS</span>
         <select id="cB" class="bg-s3 rounded-lg px-2.5 py-1.5 font-mono text-xs border border-s4">${opts(CP.b, 1)}</select>
       </div>
       <div class="flex items-center gap-2">
@@ -1207,11 +1305,16 @@ const views = {
   },
 
   history() {
-    return `<div class="p-5 max-w-5xl mx-auto flex flex-col gap-4">
-    <div class="flex items-center justify-between">
+    return `<div class="p-5 max-w-5xl mx-auto flex flex-col gap-5">
+    <div class="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-s3/40">
       <div>
-        <h1 class="text-3xl font-semibold tracking-tight">Trace & Session Logs</h1>
-        <p class="text-mut text-xs">Execution history saved locally across browser sessions.</p>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+          <span class="ms text-pri text-[28px]">history</span>
+          Telemetry &amp; Execution Logs
+        </h1>
+        <p class="text-sm text-[#b0b8db] pt-1.5 max-w-2xl leading-relaxed">
+          Historical run metrics, comparison counts, and memory writes recorded during active sessions.
+        </p>
       </div>
       <div class="flex gap-2">
         <button data-a="hexp" class="${sec} flex items-center gap-1"><span class="ms text-[16px]">download</span>Export CSV</button>
@@ -1237,10 +1340,15 @@ const views = {
   },
 
   datasets() {
-    return `<div class="p-5 max-w-5xl mx-auto flex flex-col gap-4">
-    <div>
-      <h1 class="text-3xl font-semibold tracking-tight">Dataset Synthesizer</h1>
-      <p class="text-mut">Generate pathological, adversarial, or uniform datasets and inject them directly into the visualizer or arena.</p>
+    return `<div class="p-5 max-w-5xl mx-auto flex flex-col gap-5">
+    <div class="pb-2 border-b border-s3/40">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+        <span class="ms text-pri text-[28px]">data_array</span>
+        Synthetic Dataset Generator
+      </h1>
+      <p class="text-sm text-[#b0b8db] pt-1.5 max-w-3xl leading-relaxed">
+        Synthesize adversarial, Gaussian, worst-case O(n²), or uniform distributions with one-click injection into the visualizer or benchmark arena.
+      </p>
     </div>
     <div class="bg-s1 rounded-xl p-5 flex flex-col gap-4 border border-s3">
       <div class="flex flex-wrap gap-2">
@@ -1250,29 +1358,37 @@ const views = {
       <div class="flex items-center gap-3">
         ${lab('Array Size')}
         <input id="dN" type="range" min="4" max="40" value="${DS.n}" class="!w-48">
-        <span id="dnv" class="font-mono text-pri font-bold text-sm">${DS.n}</span>
+        <span id="dnv" class="font-mono text-pri font-bold text-sm">${DS.n} elements</span>
       </div>
       <div id="dprev" class="bg-s0 rounded-xl p-4 border border-s3"></div>
       <div id="dtxt" class="font-mono text-xs text-mut break-all bg-s0 p-3 rounded-lg border border-s3/40"></div>
       <div class="flex gap-2 justify-end">
         <button data-a="dlexport" data-v="csv" class="${sec}">Export CSV</button>
         <button data-a="dlexport" data-v="json" class="${sec}">Export JSON</button>
-        <button data-a="dsC" class="${sec}">Use in Compare</button>
-        <button data-a="dsV" class="${pri}">Load in Visualizer →</button>
+        <button data-a="dsC" class="${sec}">Use in Arena</button>
+        <button data-a="dsV" class="${pri}">Load in Studio →</button>
       </div>
     </div>
     </div>`;
   },
 
   about() {
-    return `<div class="p-5 max-w-4xl mx-auto flex flex-col gap-4">
-    <h1 class="text-3xl font-semibold tracking-tight">Sorted Engine Documentation</h1>
+    return `<div class="p-5 max-w-4xl mx-auto flex flex-col gap-5">
+    <div class="pb-2 border-b border-s3/40">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+        <span class="ms text-pri text-[28px]">menu_book</span>
+        System Architecture &amp; Engineering Reference
+      </h1>
+      <p class="text-sm text-[#b0b8db] pt-1.5 max-w-3xl leading-relaxed">
+        Technical specifications, deterministic state machine architecture, memory taxonomy, and developer keybindings.
+      </p>
+    </div>
     <div class="bg-s1 rounded-xl p-5 flex flex-col gap-4 border border-s3 text-mut text-xs leading-relaxed">
-      <p class="text-fg text-sm">
+      <p class="text-fg text-sm leading-relaxed">
         <b>Sorted</b> is a deterministic algorithm state tracing platform. It captures immutable snapshots of memory registers, array pointers, recursion stack frames, and operational invariants at every single discrete step.
       </p>
       <div>
-        <div class="text-fg font-medium text-sm mb-1">Keyboard Shortcuts</div>
+        <div class="text-fg font-medium text-sm mb-1">Developer Shortcuts</div>
         <div class="font-mono grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div class="p-2 bg-s0 rounded border border-s3"><b class="text-pri">Space</b> Play / Pause</div>
           <div class="p-2 bg-s0 rounded border border-s3"><b class="text-pri">→</b> Step Forward</div>
@@ -1281,17 +1397,71 @@ const views = {
         </div>
       </div>
       <div>
-        <div class="text-fg font-medium text-sm mb-1">Color Palette & Invariant Tags</div>
-        <div class="flex flex-wrap gap-4 font-mono">
-          <span class="text-ter">■ Pivot / Minimum / Current</span>
-          <span class="text-pri">■ Comparison / Open Set</span>
-          <span class="text-err">■ Write / Swap / Shift</span>
-          <span class="text-ok">■ Sorted / Final Path</span>
-          <span class="text-sec">■ Closed Set</span>
+        <div class="text-fg font-medium text-sm mb-1">Color Palette &amp; Invariant Taxonomy</div>
+        <div class="flex flex-wrap gap-4 font-mono text-xs">
+          <span class="text-ter font-semibold">■ Pivot / Minimum / Active Register</span>
+          <span class="text-pri font-semibold">■ Comparison / Open Set Frontier</span>
+          <span class="text-err font-semibold">■ Register Write / Inversion Swap</span>
+          <span class="text-ok font-semibold">■ Sorted Partition / Optimal Path</span>
+          <span class="text-sec font-semibold">■ Closed Set / Visited Buffer</span>
         </div>
       </div>
     </div>
     </div>`;
+  },
+
+  home() {
+    const nA = Object.keys(META).length, nV = window.CV_TABS ? CV_TABS.length : 12;
+    const hs = [38, 70, 24, 92, 55, 31, 80, 46, 64, 28, 74, 52];
+    return `
+    <section class="hero">
+      <div class="hero-in">
+        <h1>Look inside the algorithm &amp; machine vision.</h1>
+        <p>An industrial-grade deterministic simulation platform for tracing memory registers, operational invariants, spatial kernel convolutions, and high-dimensional tensors in real-time 60 FPS.</p>
+        <div class="flex flex-wrap gap-3.5 mt-10">
+          <button type="button" onclick="navTo('visualize', event)" class="cta cta-pri"><span class="ms">terminal</span>Open Algorithm Studio</button>
+          <button type="button" onclick="navTo('vision', event)" class="cta cta-gl"><span class="ms">auto_awesome</span>Launch Vision Studio</button>
+        </div>
+      </div>
+      <button type="button" class="cue" aria-label="Explore engineering workspaces" onclick="document.getElementById('work').scrollIntoView({ behavior: 'smooth' })"><span class="ms">expand_more</span></button>
+    </section>
+    <section id="work" class="ws"><div class="ws-in">
+      <article class="wc">
+        <div class="viz" aria-hidden="true">${hs.map(h => `<i style="height:${h}%"></i>`).join('')}</div>
+        <div class="flex items-center justify-between">
+          <h2>Algorithm Studio</h2>
+          <span class="px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-pri font-mono text-[11px] font-semibold">24 SOLVERS</span>
+        </div>
+        <p class="text-mut text-sm leading-relaxed">${nA} deterministic algorithms across sorting, searching, graph theory, dynamic programming, and AI search, each traced step-by-step with cycle-accurate registers.</p>
+        <ul>
+          <li><span class="ms">terminal</span>Python execution tracer with line-by-line register highlighting</li>
+          <li><span class="ms">memory</span>Register-level memory inspector and invariant state analysis</li>
+          <li><span class="ms">speed</span>Synchronized multi-algorithm benchmark arena with telemetry deltas</li>
+        </ul>
+        <button type="button" onclick="navTo('visualize', event)" class="cta cta-pri self-start mt-auto">Enter Algorithm Studio →</button>
+      </article>
+      <article class="wc">
+        <div class="pxg" aria-hidden="true">${Array.from({ length: 80 }, (_, i) => `<i style="opacity:${(.12 + ((i * 37) % 100) / 125).toFixed(2)}"></i>`).join('')}</div>
+        <div class="flex items-center justify-between">
+          <h2>Vision Studio</h2>
+          <span class="px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-sec font-mono text-[11px] font-semibold">12 PIPELINES</span>
+        </div>
+        <p class="text-mut text-sm leading-relaxed">${nV} interactive computer vision workspaces from spatial convolution kernels and Canny edge gradients to SIFT keypoints and PCA dimensionality reduction.</p>
+        <ul>
+          <li><span class="ms">grain</span>Interactive 3×3 kernel convolution sliding matrix with live scalar math</li>
+          <li><span class="ms">tune</span>Real-time intensity transformations, histograms, and frequency filtering</li>
+          <li><span class="ms">alt_route</span>Non-destructive multi-stage vision pipeline studio</li>
+        </ul>
+        <button type="button" onclick="navTo('vision', event)" class="cta cta-gl self-start mt-auto">Enter Vision Studio →</button>
+      </article>
+    </div></section>`;
+  },
+
+  vision() {
+    if (typeof renderVisionView === 'function') {
+      return renderVisionView();
+    }
+    return `<div class="p-8 text-center font-mono text-mut">Loading Computer Vision &amp; Tensor Studio Engine...</div>`;
   }
 };
 
@@ -1317,7 +1487,7 @@ function paintV() {
   const TN = V.S.T || [], nd = TN.slice(0, s.tn || 0), stk = s.stk || [], ac = stk.at(-1), nm = V.algo == 'quick' ? 'quicksort' : 'merge_sort';
   $('#recTree').innerHTML = `
     <div class="flex justify-between items-center pb-1 text-ol text-[11px] uppercase">
-      <span>Call Stack & Invariant State</span>
+      <span>Call Stack &amp; Invariant Register State</span>
       <span class="text-pri font-bold">${V.algo == 'quick' ? (ST == 'hoare' ? 'Hoare Dual-Pointer' : 'Lomuto Single-Pointer') : V.algo}</span>
     </div>` + (['quick', 'merge'].includes(V.algo) ? `
     <div class="grid md:grid-cols-3 gap-2 mt-1">
@@ -1386,11 +1556,11 @@ function paintV() {
     <div class="flex justify-between items-center text-xs font-mono uppercase text-ol pb-2 shrink-0 border-b border-s3/40">
       <span class="flex items-center gap-1.5 text-fg font-semibold">
         <span class="ms text-pri text-[18px]">code</span>
-        Python Source Tracker
+        Python Kernel Tracer // Active Instruction
       </span>
       <div class="flex items-center gap-2">
         <span class="text-mut text-xs lowercase">${CODE[V.algo].length} lines</span>
-        <span class="text-pri font-bold bg-s1 px-2.5 py-0.5 rounded border border-s3">${V.algo}.py</span>
+        <span class="text-pri font-bold bg-s1 px-2.5 py-0.5 rounded border border-s3 font-mono">${V.algo}.py</span>
       </div>
     </div>
     <div id="codeBox" class="rounded-xl bg-s1/60 p-3 mt-2.5 font-mono text-[13px] leading-relaxed overflow-y-auto overflow-x-auto border border-s3/80 h-[380px] min-h-[380px] max-h-[440px] flex flex-col gap-0.5 shadow-inner">
@@ -1416,9 +1586,9 @@ function paintV() {
   $('#state').innerHTML = `
     <div class="flex justify-between items-center pb-2 border-b border-s3/40">
       <span class="text-xs font-mono uppercase flex items-center gap-1.5 font-semibold text-fg">
-        <span class="ms text-pri text-[18px]">terminal</span>Execution State
+        <span class="ms text-pri text-[18px]">memory</span>Register &amp; Memory Telemetry
       </span>
-      <span class="px-2.5 py-0.5 rounded font-mono text-[11px] font-bold ${done ? 'bg-ok text-s0' : s.swp ? 'bg-err text-s0' : s.cmp ? 'bg-pc text-onpc' : 'bg-s3 text-fg'}">${done ? 'DONE' : s.swp ? 'WRITE/SWAP' : s.cmp ? 'COMPARE' : 'ACTIVE'}</span>
+      <span class="px-2.5 py-0.5 rounded font-mono text-[11px] font-bold ${done ? 'bg-ok text-s0' : s.swp ? 'bg-err text-s0' : s.cmp ? 'bg-pc text-onpc' : 'bg-s3 text-fg'}">${done ? 'DONE' : s.swp ? 'REGISTER WRITE' : s.cmp ? 'COMPARING' : 'ACTIVE INVARIANT'}</span>
     </div>
     <div class="grid grid-cols-3 gap-2.5 mt-2.5 font-mono text-xs">
       ${statVars.map(([a, b, c]) => `
@@ -1428,20 +1598,20 @@ function paintV() {
         </div>`).join('')}
     </div>`;
 
-  // 4. Right Bottom: Why this step?
+  // 4. Right Bottom: Invariant Logic Analysis
   $('#why').innerHTML = `
     <div class="flex items-center justify-between text-pri font-medium text-sm shrink-0 border-b border-s3/40 pb-1.5">
       <div class="flex items-center gap-1.5">
-        <span class="ms text-pri text-[18px]">lightbulb</span>
-        <span>Why this step?</span>
+        <span class="ms text-pri text-[18px]">psychology</span>
+        <span>Algorithmic Invariant &amp; State Logic</span>
       </div>
-      <span class="text-[10px] font-mono text-ol uppercase">Invariant Logic</span>
+      <span class="text-[10px] font-mono text-ol uppercase">Invariant Engine</span>
     </div>
-    <div class="text-xs text-mut leading-relaxed overflow-y-auto mt-2 flex-1 pr-1" style="height: 54px; max-height: 54px;">
+    <div class="text-xs text-mut leading-relaxed overflow-y-auto mt-2 flex-1 pr-1 font-mono" style="height: 54px; max-height: 54px;">
       ${s.m}
     </div>`;
 
-  $('#ms').textContent = n + ' steps';
+  if ($('#ms')) $('#ms').textContent = n + ' steps';
 
   // 5. Bottom: Simulator Controls
   $('#bar').innerHTML = `
@@ -1451,8 +1621,8 @@ function paintV() {
         <span class="text-mut text-xs">${pct}% Completed</span>
       </div>
       <div class="text-ol text-xs hidden sm:flex items-center gap-4">
-        <span>Step 0: Init</span>
-        <span class="text-ter font-semibold">Step ${V.i}: Active</span>
+        <span>Step 0: Buffer Loaded</span>
+        <span class="text-ter font-semibold">Step ${V.i}: Invariant Verified</span>
         <span>Step ${n}: Sorted</span>
       </div>
     </div>
@@ -1539,6 +1709,157 @@ function paintDS() {
   $('#dtxt').textContent = '[' + DS.arr.join(', ') + ']';
 }
 
+// ---- section sub-navigation + 3D hero scene ----
+var PRT;
+const SUB = [
+  ['visualize', 'Runtime Deck', 'play_circle'],
+  ['algorithms', 'Algorithm Catalog', 'category'],
+  ['compare', 'Benchmark Arena', 'splitscreen'],
+  ['datasets', 'Synthetic Data Engine', 'data_array'],
+  ['history', 'Telemetry Logs', 'history']
+];
+const subnav = () => SUB.some(x => x[0] == RT) ? `<div class="flex justify-center px-4 pb-3"><div class="subnav" role="tablist">${SUB.map(([k, t, ic]) => `<button type="button" role="tab" onclick="navTo('${k}', event)" class="sn ${k == RT ? 'on' : ''}"><span class="ms" style="font-size:17px;margin-right:7px">${ic}</span>${t}</button>`).join('')}</div></div>` : '';
+
+const renderFooter = () => `
+<footer class="site-footer">
+  <div class="footer-in">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="flex items-center gap-2.5">
+          <svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+            <defs>
+              <linearGradient id="flg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#7c5cff"/>
+                <stop offset="1" stop-color="#4f8cff"/>
+              </linearGradient>
+            </defs>
+            <rect x="3" y="14" width="5" height="11" rx="1.5" fill="url(#flg)"/>
+            <rect x="11" y="5" width="5" height="20" rx="1.5" fill="url(#flg)"/>
+            <rect x="19" y="10" width="5" height="15" rx="1.5" fill="url(#flg)"/>
+          </svg>
+          <span class="text-white font-bold text-lg font-['Bricolage_Grotesque',Geist,sans-serif]">Sorted</span>
+        </div>
+        <p class="text-xs text-[#9ba3cb] leading-relaxed mt-3 max-w-sm">
+          Deterministic simulation platform for tracing memory registers, operational invariants, spatial convolution kernels, and machine vision tensors.
+        </p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <div class="footer-col-title">Workspaces</div>
+          <button type="button" onclick="navTo('visualize', event)">Algorithm Studio</button>
+          <button type="button" onclick="navTo('vision', event)">Vision Studio</button>
+          <button type="button" onclick="navTo('compare', event)">Benchmark Arena</button>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Platform</div>
+          <button type="button" onclick="navTo('algorithms', event)">Algorithm Catalog</button>
+          <button type="button" onclick="navTo('datasets', event)">Synthetic Datasets</button>
+          <button type="button" onclick="navTo('history', event)">Telemetry Logs</button>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Documentation</div>
+          <button type="button" onclick="navTo('about', event)">Architecture &amp; Docs</button>
+          <button type="button" onclick="navTo('home', event)">Platform Overview</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="text-xs text-[#7d85a8]">
+        © 2026 Sorted Engine. All rights reserved.
+      </div>
+      <div class="flex items-center gap-6 text-xs text-[#7d85a8]">
+        <button type="button" onclick="navTo('about', event)" class="hover:text-white transition-colors">Specifications</button>
+        <button type="button" onclick="navTo('visualize', event)" class="hover:text-white transition-colors">Runtime Deck</button>
+        <button type="button" onclick="navTo('vision', event)" class="hover:text-white transition-colors">Tensor Lab</button>
+      </div>
+    </div>
+  </div>
+</footer>`;
+
+let SC = null;
+function scene(on) {
+  const cv = $('#scene');
+  cv.style.display = on ? 'block' : 'none';
+  if (!on) { if (SC && SC.raf) { cancelAnimationFrame(SC.raf); SC.raf = 0; } return; }
+  if (SC) { if (!SC.raf) SC.run(); return; }
+  if (!window.THREE) return;
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+  R.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  R.setClearColor(0x000000, 0);
+  const sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(55, 1, .1, 100);
+  cam.position.z = 9;
+  sc.fog = new THREE.FogExp2(0x070815, .04);
+  sc.add(new THREE.AmbientLight(0x8890ff, .55));
+  const l1 = new THREE.PointLight(0x4f8cff, 2.4, 40); l1.position.set(-6, 4, 6); sc.add(l1);
+  const l2 = new THREE.PointLight(0x9b5cff, 2.4, 40); l2.position.set(6, -3, 5); sc.add(l2);
+
+  const geos = [new THREE.IcosahedronGeometry(1, 0), new THREE.OctahedronGeometry(1, 0), new THREE.TetrahedronGeometry(1, 0), new THREE.BoxGeometry(1.2, 1.2, 1.2), new THREE.TorusGeometry(.8, .28, 12, 36)];
+  const big = [[5.2, 1, -3], [-5.5, -.5, -4], [3, 2.8, -6]];
+  const objs = [];
+  for (let i = 0; i < 18; i++) {
+    const g = geos[i % geos.length], col = i % 2 ? 0x6d8cff : 0xa07bff;
+    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: col, metalness: .6, roughness: .25, transparent: true, opacity: .34, emissive: col, emissiveIntensity: .28 }));
+    m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0xbcc8ff, transparent: true, opacity: .55 })));
+    if (i < 3) { m.position.set(...big[i]); m.scale.setScalar(1.7 + i * .2); }
+    else { m.position.set((Math.random() < .5 ? -1 : 1) * (2.5 + Math.random() * 7), (Math.random() - .5) * 8, -1 - Math.random() * 7); m.scale.setScalar(.35 + Math.random() * .55); }
+    m.userData = { rx: .002 + Math.random() * .006, ry: .002 + Math.random() * .006, f: Math.random() * 6, a: .2 + Math.random() * .4, y: m.position.y };
+    sc.add(m); objs.push(m);
+  }
+
+  const N = 1100, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
+  for (let i = 0; i < N; i++) {
+    pos.set([(Math.random() - .5) * 30, (Math.random() - .5) * 18, 4 - Math.random() * 16], i * 3);
+    cc.setHSL(.6 + Math.random() * .14, .9, .68); col.set([cc.r, cc.g, cc.b], i * 3);
+  }
+  const pg = new THREE.BufferGeometry();
+  pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const tc = document.createElement('canvas'); tc.width = tc.height = 64;
+  const cx = tc.getContext('2d'), gr = cx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.3, 'rgba(255,255,255,.5)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  cx.fillStyle = gr; cx.fillRect(0, 0, 64, 64);
+  const pts = new THREE.Points(pg, new THREE.PointsMaterial({ size: .17, map: new THREE.CanvasTexture(tc), vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  sc.add(pts);
+
+  // a row of bars that keeps bubble-sorting itself
+  const NB = 18, bars = [], tg = [], grp = new THREE.Group();
+  grp.position.set(0, -3.7, -1); sc.add(grp);
+  const shuffle = () => { for (let i = 0; i < NB; i++) tg[i] = .4 + Math.random() * 2.6; };
+  shuffle();
+  for (let i = 0; i < NB; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(.32, 1, .32), new THREE.MeshStandardMaterial({ color: 0x6d8cff, emissive: 0x6d5efc, emissiveIntensity: .5, transparent: true, opacity: .55, metalness: .3, roughness: .4 }));
+    b.position.x = (i - (NB - 1) / 2) * .55; b.scale.y = tg[i]; grp.add(b); bars.push(b);
+  }
+  let bi = 0, bj = 0, last = 0;
+  const stepSort = () => {
+    if (tg[bj] > tg[bj + 1]) { const t = tg[bj]; tg[bj] = tg[bj + 1]; tg[bj + 1] = t; }
+    if (++bj >= NB - 1 - bi) { bj = 0; if (++bi >= NB - 1) { bi = 0; shuffle(); } }
+  };
+
+  const mo = { x: 0, y: 0 };
+  addEventListener('pointermove', e => { mo.x = e.clientX / innerWidth - .5; mo.y = e.clientY / innerHeight - .5; });
+  const rs = () => { R.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); if (RM && SC) SC.run(); };
+  addEventListener('resize', rs); rs();
+
+  const clock = new THREE.Clock();
+  const loop = () => {
+    if (!RM) SC.raf = requestAnimationFrame(loop);
+    const t = clock.getElapsedTime(), sy = Math.min(scrollY, 900);
+    cam.position.x += (mo.x * 1.6 - cam.position.x) * .04;
+    cam.position.y += (-mo.y * 1.0 - sy * .004 - cam.position.y) * .04;
+    cam.position.z = 9 + sy * .006;
+    cam.lookAt(0, 0, 0);
+    objs.forEach(o => { const d = o.userData; o.rotation.x += d.rx; o.rotation.y += d.ry; o.position.y = d.y + Math.sin(t * .6 + d.f) * d.a; });
+    pts.rotation.y = t * .012;
+    if (!RM && t - last > .12) { last = t; stepSort(); }
+    bars.forEach((b, i) => { b.scale.y += (tg[i] - b.scale.y) * .18; b.position.y = b.scale.y / 2; b.material.emissiveIntensity = (i == bj || i == bj + 1) ? 1.4 : .5; });
+    R.render(sc, cam);
+  };
+  SC = { raf: 0, run() { if (!this.raf) loop(); } };
+  SC.run();
+}
+
 // Router that works unconditionally
 function route(targetRoute) {
   stop();
@@ -1546,32 +1867,30 @@ function route(targetRoute) {
     RT = targetRoute;
   } else if (!RT || !views[RT]) {
     let hash = '';
-    try { hash = (location.hash.slice(1) || '').toLowerCase(); } catch (e) {}
-    RT = views[hash] ? hash : 'visualize';
+    try { hash = (location.hash.slice(1) || location.pathname.replace(/^\/+|\/+$/g, '')).toLowerCase(); } catch (e) {}
+    RT = views[hash] ? hash : 'home';
   }
 
-  // Render top header nav links with icons & labels
-  $('#nav').innerHTML = NAV.map(([k, t, i]) => `
-    <button type="button" onclick="navTo('${k}', event)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition-colors border-0 text-xs font-medium ${k == RT ? 'bg-pc text-onpc font-semibold shadow-sm' : 'bg-transparent text-mut hover:text-fg hover:bg-s2'}">
-      <span class="ms text-[16px]">${i}</span><span>${t}</span>
+  const chg = PRT !== RT; PRT = RT;
+  document.body.dataset.r = RT;
+  const gr = (RT == 'vision') ? 'vision' : (RT == 'home') ? 'home' : (RT == 'about') ? 'about' : (RT == 'compare') ? 'compare' : 'algo';
+  $('#nav').innerHTML = NAV.map(([k, t, ic, g]) => `
+    <button type="button" onclick="navTo('${k}', event)" class="nl ${g == gr ? 'on' : ''}" ${g == gr ? 'aria-current="page"' : ''}>
+      <span class="ms" style="font-size:17px">${ic}</span>
+      <span>${t}</span>
     </button>`).join('');
 
   if (RT == 'visualize' && !V.S.length) ldV();
   if (RT == 'compare' && !CP.SA.length) ldC();
 
-  $('#app').innerHTML = views[RT]();
-  const mm = META[RT == 'compare' ? CP.a : V.algo];
-  $('#crumb').innerHTML = `
-    <span class="text-mut">${mm.cat} Algorithms</span>
-    <span class="text-olv">/</span>
-    <span class="text-pri font-medium">${RT == 'compare' ? 'Benchmark & Compare' : mm.n}</span>
-    <span class="px-1.5 rounded bg-s3 text-mut">${mm.avg} Avg | ${mm.w} Worst</span>
-    <span class="px-1.5 rounded bg-s3 text-ter">Space: ${mm.sp}</span>`;
+  $('#app').classList.toggle('vin', chg);
+  $('#app').innerHTML = subnav() + views[RT]() + renderFooter();
+  scene(RT == 'home');
 
   if (RT == 'visualize') { stratUI(); paintV(); }
   if (RT == 'compare') paintC();
   if (RT == 'datasets') paintDS();
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 const stratUI = () => {
@@ -1640,6 +1959,8 @@ const act = {
     beep(440);
     const au = $('#au');
     if (au) au.className = 'w-9 h-5 rounded-full p-0.5 flex cursor-pointer transition-colors ' + (AU.on ? 'bg-ter justify-end' : 'bg-s4');
+    const navAu = $('#navAudio');
+    if (navAu) navAu.className = 'nav-audio-btn ' + (AU.on ? 'on' : '');
   },
   exp(v) {
     const n = V.algo;
@@ -1752,7 +2073,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-window.addEventListener('hashchange', () => route());
+window.addEventListener('hashchange', () => { const h = (location.hash.slice(1) || 'home').toLowerCase(); if (views[h] && h !== RT) route(h); });
 route();
 </script>
 </body>

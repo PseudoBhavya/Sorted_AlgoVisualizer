@@ -1,7 +1,7 @@
 """
 Sorted — AI Search & Pathfinding Algorithms
 ===========================================
-Implements the AI curriculum search algorithms:
+Implements graph traversal and heuristic pathfinding algorithms:
 - Depth-First Search (DFS with Stack)
 - Breadth-First Search (BFS with Queue)
 - Greedy Best-First Search (Priority Queue with h(n))

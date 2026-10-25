@@ -76,6 +76,11 @@ if not os.path.exists(static_html_path):
 if os.path.exists(static_html_path):
     with open(static_html_path, "r", encoding="utf-8") as f:
         stitch_html = f.read()
+    vision_js_path = os.path.join(os.path.dirname(static_html_path), "vision.js")
+    if os.path.exists(vision_js_path):
+        with open(vision_js_path, "r", encoding="utf-8") as vf:
+            v_code = vf.read()
+        stitch_html = stitch_html.replace("</head>", f"<script>\n{v_code}\n</script></head>")
     components.html(stitch_html, height=1100, scrolling=True)
 else:
     st.error(f"Frontend bundle not found at {static_html_path}")

@@ -6,14 +6,23 @@ Creates and configures the Flask REST API application instance.
 
 from flask import Flask, jsonify
 from .routes import api_bp
+try:
+    from .cv_routes import cv_bp
+except ImportError:
+    from Sorted.api.cv_routes import cv_bp
 
 
 def create_app() -> Flask:
     """Create and configure the AlgoLens Flask application."""
-    app = Flask(__name__)
+    import os
+    from flask import send_from_directory
+
+    static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static')
+    app = Flask(__name__, static_folder=static_dir, static_url_path='/static')
     
     # Register blueprints
     app.register_blueprint(api_bp)
+    app.register_blueprint(cv_bp)
     
     # Configure CORS headers on all responses
     @app.after_request
@@ -23,14 +32,10 @@ def create_app() -> Flask:
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
         return response
 
-    import os
-    from flask import send_from_directory
-
-    static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static')
-
     @app.route('/')
     @app.route('/visualize')
     @app.route('/algorithms')
+    @app.route('/vision')
     @app.route('/compare')
     @app.route('/datasets')
     @app.route('/history')
@@ -38,9 +43,14 @@ def create_app() -> Flask:
     def serve_frontend():
         return send_from_directory(static_dir, 'index.html')
 
-    @app.route('/static/<path:filename>')
-    def serve_static(filename):
-        return send_from_directory(static_dir, filename)
+    @app.route('/vision.js')
+    def serve_vision_js():
+        return send_from_directory(static_dir, 'vision.js')
+
+    @app.route('/brain.png')
+    @app.route('/static/brain.png')
+    def serve_brain_png():
+        return send_from_directory(static_dir, 'brain.png')
 
     @app.errorhandler(404)
     def not_found(e):
