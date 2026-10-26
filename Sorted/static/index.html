@@ -12,8 +12,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/static/vision.js"></script>
 <script>window.CV||document.write('<script src="vision.js"><\/script>')</script>
-<script src="/static/grid-scan.js?v=2"></script>
-<script>window.createGridScan||document.write('<script src="grid-scan.js?v=2"><\/script>')</script>
+<script src="/static/grid-scan.js?v=3"></script>
+<script>window.createGridScan||document.write('<script src="grid-scan.js?v=3"><\/script>')</script>
 <style>
 :root{--bd:rgba(150,160,255,.14)}
 html{scroll-behavior:smooth;background:#070815}
@@ -31,6 +31,76 @@ h1,h2,h3{font-family:'Bricolage Grotesque',Geist,sans-serif;letter-spacing:-.025
 .grid-scan-canvas{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none}
 #bg-gridscan{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:none;pointer-events:none;overflow:hidden;background:#08060f}
 body:not([data-r=home]):before{display:none}
+
+/* Interactive Bar Chart Colors & Hover Effects */
+.algo-bar-col{position:relative;transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.b-bar{
+  position:relative;
+  transition:height .2s cubic-bezier(.4,0,.2,1),background .2s ease,box-shadow .2s ease,transform .2s ease,filter .2s ease;
+  border-top:1px solid rgba(255,255,255,.14);
+}
+.bar-tooltip{
+  opacity:0;
+  transform:translate(-50%,6px);
+  pointer-events:none;
+  position:absolute;
+  top:-26px;
+  left:50%;
+  background:rgba(10,8,24,.96);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+  border:1px solid hsl(var(--bar-hue, 275deg));
+  box-shadow:0 4px 16px rgba(0,0,0,.7),0 0 12px hsl(var(--bar-hue, 275deg)/.4);
+  padding:2px 8px;
+  border-radius:6px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10.5px;
+  font-weight:700;
+  color:#fff;
+  white-space:nowrap;
+  z-index:30;
+  transition:opacity .18s ease,transform .18s ease;
+}
+
+/* ONLY when simulation is NOT playing: show rich dynamic hover colors */
+body:not(.is-sim-playing) .algo-bar-col{cursor:pointer}
+body:not(.is-sim-playing) .algo-bar-col:hover{z-index:25}
+body:not(.is-sim-playing) .algo-bar-col:hover .b-bar{
+  background:linear-gradient(180deg, hsl(var(--bar-hue, 275deg), 100%, 72%) 0%, hsl(var(--bar-hue, 275deg), 96%, 52%) 60%, hsl(var(--bar-hue, 275deg), 90%, 40%) 100%) !important;
+  color:#ffffff !important;
+  box-shadow:0 0 22px hsl(var(--bar-hue, 275deg)/.85),0 0 40px hsl(var(--bar-hue, 275deg)/.5),inset 0 1px 0 rgba(255,255,255,.9) !important;
+  transform:translateY(-4px) scaleX(1.05);
+  filter:brightness(1.22) drop-shadow(0 4px 14px hsl(var(--bar-hue, 275deg)/.5));
+  border-top:1px solid rgba(255,255,255,.9) !important;
+}
+body:not(.is-sim-playing) .algo-bar-col:hover .bar-tooltip{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+body:not(.is-sim-playing) .algo-bar-col:hover .bar-idx-lbl{
+  color:hsl(var(--bar-hue, 275deg)) !important;
+  font-weight:700 !important;
+  text-shadow:0 0 10px hsl(var(--bar-hue, 275deg)/.85);
+}
+
+/* STRICTLY when the algorithm is being played: disable hover colors completely */
+body.is-sim-playing .algo-bar-col,
+body.is-sim-playing .algo-bar-col *,
+body.is-sim-playing .b-bar{
+  pointer-events:none !important;
+  cursor:default !important;
+}
+body.is-sim-playing .algo-bar-col:hover .b-bar,
+body.is-sim-playing .b-bar:hover{
+  transform:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+}
+body.is-sim-playing .bar-tooltip{
+  display:none !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+}
 #app{position:relative;z-index:1;padding-top:76px;min-height:100vh;display:flex;flex-direction:column}
 body[data-r=home] #app{padding-top:0}
 #app.vin>*{animation:vin .4s cubic-bezier(.2,.7,.2,1) both}
@@ -986,10 +1056,15 @@ const ldC = () => {
   CP.SB = gen(CP.b, CP.arr);
   CP.i = 0;
 };
-const stop = () => { clearInterval(T); P = false; };
+const stop = () => {
+  clearInterval(T);
+  P = false;
+  document.body.classList.remove('is-sim-playing');
+};
 const start = () => {
   clearInterval(T);
   P = true;
+  document.body.classList.add('is-sim-playing');
   T = setInterval(tick, 700 / (RT == 'compare' ? CP.sp : V.sp));
 };
 
@@ -1039,7 +1114,7 @@ const cc = (s, i) => s.sd ? 'bg-ok text-s0' : s.swp && s.swp.includes(i) ? 'bg-e
 
 function bars(s, h = 'h-64') {
   const a = s.a, mx = Math.max(...a, 1), n = a.length;
-  return `<div class="flex items-end gap-1 ${h} px-1">${a.map((v, i) => {
+  return `<div class="bar-chart-stage flex items-end gap-1 ${h} px-1">${a.map((v, i) => {
     let c = 'bg-s4 text-mut', tag = '';
     if (s.rng && (i < s.rng[0] || i > s.rng[1])) c = 'bg-s3 text-ol opacity-40';
     if (s.sd) c = 'bg-ok text-s0 font-bold';
@@ -1049,10 +1124,13 @@ function bars(s, h = 'h-64') {
     if (i === s.pi) tag += (tag ? ' ' : '') + 'i';
     if (i === s.pj) tag += (tag ? ' ' : '') + 'j';
     if (s.tg && s.tg[i]) tag += (tag ? ' ' : '') + s.tg[i];
-    return `<div class="flex-1 flex flex-col items-center justify-end h-full gap-1 min-w-0">
+
+    const hue = Math.round((i * 137.508) % 360);
+    return `<div data-bar-idx="${i}" style="--bar-hue:${hue}deg" class="algo-bar-col flex-1 flex flex-col items-center justify-end h-full gap-1 min-w-0 group/bar relative">
+      <div class="bar-tooltip">val: ${v}</div>
       <span class="text-[10px] font-mono text-ter h-4 whitespace-nowrap">${tag}</span>
-      <div class="b w-full rounded-t ${c} flex justify-center pt-1 text-[11px] font-mono font-semibold overflow-hidden shadow-sm" style="height:${(v / mx) * 82}%">${n <= 26 ? v : ''}</div>
-      <span class="text-[9px] font-mono text-ol">[${n <= 30 ? i : ''}]</span>
+      <div data-val="${v}" data-idx="${i}" class="b b-bar w-full rounded-t ${c} flex justify-center pt-1 text-[11px] font-mono font-semibold overflow-hidden shadow-sm" style="height:${(v / mx) * 82}%">${n <= 26 ? v : ''}</div>
+      <span class="bar-idx-lbl text-[9px] font-mono text-ol transition-colors">[${n <= 30 ? i : ''}]</span>
     </div>`;
   }).join('')}</div>`;
 }
@@ -1492,6 +1570,49 @@ function paintV() {
       <span class="ml-auto text-pri font-semibold">Step ${V.i}: ${s.m.split('.')[0]}</span>
     </div>`;
 
+  // Background detects box movement and flickers/ripples in sync with the algorithm
+  if (window.GRID_SCAN && s) {
+    if (s.swp && s.swp.length) {
+      const idx1 = s.swp[0];
+      const idx2 = s.swp[1] != null ? s.swp[1] : idx1;
+      const el1 = $(`[data-bar-idx="${idx1}"]`);
+      const el2 = $(`[data-bar-idx="${idx2}"]`);
+      if (el1 && el2) {
+        const r1 = el1.getBoundingClientRect();
+        const r2 = el2.getBoundingClientRect();
+        const cx = (r1.left + r2.right) / 2;
+        const cy = (r1.top + r2.top) / 2 + r1.height / 2;
+        window.GRID_SCAN.flicker(cx, cy, 'swap');
+      } else if (el1) {
+        const r = el1.getBoundingClientRect();
+        window.GRID_SCAN.flicker(r.left + r.width / 2, r.top + r.height / 2, 'swap');
+      } else {
+        window.GRID_SCAN.flicker(innerWidth / 2, innerHeight / 2, 'swap');
+      }
+    } else if (s.cmp && s.cmp.length) {
+      const idx1 = s.cmp[0];
+      const idx2 = s.cmp[1] != null ? s.cmp[1] : idx1;
+      const el1 = $(`[data-bar-idx="${idx1}"]`);
+      const el2 = $(`[data-bar-idx="${idx2}"]`);
+      if (el1 && el2) {
+        const r1 = el1.getBoundingClientRect();
+        const r2 = el2.getBoundingClientRect();
+        const cx = (r1.left + r2.right) / 2;
+        const cy = (r1.top + r2.top) / 2 + r1.height / 2;
+        window.GRID_SCAN.flicker(cx, cy, 'cmp');
+      } else if (el1) {
+        const r = el1.getBoundingClientRect();
+        window.GRID_SCAN.flicker(r.left + r.width / 2, r.top + r.height / 2, 'cmp');
+      }
+    } else if (s.piv != null) {
+      const el = $(`[data-bar-idx="${s.piv}"]`);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        window.GRID_SCAN.flicker(r.left + r.width / 2, r.top + r.height / 2, 'cmp');
+      }
+    }
+  }
+
   // Recursion Tree / Call stack frame
   const TN = V.S.T || [], nd = TN.slice(0, s.tn || 0), stk = s.stk || [], ac = stk.at(-1), nm = V.algo == 'quick' ? 'quicksort' : 'merge_sort';
   $('#recTree').innerHTML = `
@@ -1678,6 +1799,17 @@ function paintC() {
   };
   pan(CP.SA, CP.a, 'pA');
   pan(CP.SB, CP.b, 'pB');
+
+  // Background detects box movement during comparisons
+  if (window.GRID_SCAN && CP) {
+    const sA = CP.SA && CP.SA[Math.min(CP.i, CP.SA.length - 1)];
+    const sB = CP.SB && CP.SB[Math.min(CP.i, CP.SB.length - 1)];
+    if ((sA && sA.swp && sA.swp.length) || (sB && sB.swp && sB.swp.length)) {
+      window.GRID_SCAN.flicker(innerWidth / 2, innerHeight / 2, 'swap');
+    } else if ((sA && sA.cmp && sA.cmp.length) || (sB && sB.cmp && sB.cmp.length)) {
+      window.GRID_SCAN.flicker(innerWidth / 2, innerHeight / 2, 'cmp');
+    }
+  }
 
   const a = CP.SA.at(-1), b = CP.SB.at(-1);
   const row = (t, x, y) => {

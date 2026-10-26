@@ -494,6 +494,7 @@ function createGridScan(container, options = {}) {
   let last = 0;
   let visible = true;
   let leaveTimer = 0;
+  let flicker = 0;
 
   const roomSize = () => {
     const aspect = view.width / view.height;
@@ -516,6 +517,22 @@ function createGridScan(container, options = {}) {
     if (Math.abs(dx) > 1e-6) t = Math.min(t, (sx - px) / dx);
     if (Math.abs(dy) > 1e-6) t = Math.min(t, (sy - py) / dy);
     return { x: px + dx * t, y: py + dy * t, z: dz * t };
+  };
+
+  const flickerEffect = (screenX, screenY, type = 'swap') => {
+    if (!visible) return;
+    flicker = type === 'swap' ? 1.0 : 0.55;
+    if (screenX != null && screenY != null) {
+      const rect = container.getBoundingClientRect();
+      const u = (screenX - rect.left) / Math.max(1, rect.width);
+      const v = 1 - (screenY - rect.top) / Math.max(1, rect.height);
+      if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+        const hit = castRay(u, v);
+        pings.unshift({ ...hit, age: 0 });
+        if (pings.length > MAX_PINGS) pings.pop();
+      }
+    }
+    wake();
   };
 
   const startSweep = s => {
@@ -618,6 +635,12 @@ function createGridScan(container, options = {}) {
     const coreRgb = s.lightMode ? scanRgb : scanRgb.map(c => c + (1 - c) * 0.65);
     const ru = room.uniforms;
 
+    const fVal = flicker;
+    const currentThick = s.thickness * view.ratio * 0.5 * (1.0 + fVal * 0.85);
+    const currentScanAlpha = Math.min(1.0, scan.alpha + fVal * 0.8);
+    const currentDot = 1.8 * view.ratio * (1.0 + fVal * 0.7);
+    const currentHaze = (s.lightMode ? 0.03 : 0.05) + fVal * 0.06;
+
     gl.bindVertexArray(vao);
     gl.disable(gl.BLEND);
     gl.bindFramebuffer(gl.FRAMEBUFFER, sceneBuffer);
@@ -629,8 +652,8 @@ function createGridScan(container, options = {}) {
     gl.uniform3f(ru.uEye, eye.x, eye.y, -eye.f);
     gl.uniform1f(ru.uDepth, roomDepth);
     gl.uniform3f(ru.uCell, cx, cy, cy);
-    gl.uniform1f(ru.uThick, s.thickness * view.ratio * 0.5);
-    gl.uniform1f(ru.uDot, 1.8 * view.ratio);
+    gl.uniform1f(ru.uThick, currentThick);
+    gl.uniform1f(ru.uDot, currentDot);
     gl.uniform1i(ru.uStyle, s.style);
     gl.uniform3fv(ru.uLineColor, lineRgb);
     gl.uniform3fv(ru.uScanColor, scanRgb);
@@ -638,13 +661,13 @@ function createGridScan(container, options = {}) {
     gl.uniform1f(ru.uFade, s.depthFade);
     gl.uniform1f(ru.uScanZ, scan.z);
     gl.uniform1f(ru.uScanDir, scan.dir);
-    gl.uniform1f(ru.uScanAlpha, scan.alpha);
+    gl.uniform1f(ru.uScanAlpha, currentScanAlpha);
     gl.uniform1f(ru.uScanWidth, 0.006 * s.scanWidth);
     gl.uniform1f(ru.uTrail, 0.04 + s.trail * 1.1);
     gl.uniform1f(ru.uReveal, introClock < 1 ? scan.z + 0.05 : 1e4);
     gl.uniform1f(ru.uPoints, s.points ? 1 : 0);
     gl.uniform1f(ru.uReflect, s.reflection);
-    gl.uniform1f(ru.uHaze, s.lightMode ? 0.03 : 0.05);
+    gl.uniform1f(ru.uHaze, currentHaze);
     gl.uniform1f(ru.uShade, s.shading);
     gl.uniform1f(ru.uLight, s.lightMode ? 1 : 0);
     gl.uniform4fv(ru.uPing, pingData);
@@ -653,7 +676,7 @@ function createGridScan(container, options = {}) {
     gl.uniform1f(ru.uTime, time);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    const glowing = s.glow > 0;
+    const glowing = s.glow > 0 || fVal > 0;
     if (glowing) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, bloomBufferA);
       gl.viewport(0, 0, bloomA.width, bloomA.height);
@@ -678,6 +701,8 @@ function createGridScan(container, options = {}) {
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
+    const currentGlow = (s.glow * (s.lightMode ? 0.8 : 1.6)) * (1.0 + fVal * 2.8) + fVal * 0.45;
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.useProgram(composite.program);
@@ -687,7 +712,7 @@ function createGridScan(container, options = {}) {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, bloomA.texture);
     gl.uniform1i(composite.uniforms.uBloom, 1);
-    gl.uniform1f(composite.uniforms.uGlow, glowing ? s.glow * (s.lightMode ? 0.8 : 1.6) : 0);
+    gl.uniform1f(composite.uniforms.uGlow, glowing ? currentGlow : 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.activeTexture(gl.TEXTURE0);
   };
@@ -698,6 +723,12 @@ function createGridScan(container, options = {}) {
     const dt = last ? clamp((now - last) / 1000, 0.001, 0.05) : 1 / 60;
     last = now;
     time += dt;
+
+    if (flicker > 0.01) {
+      flicker *= 0.86;
+    } else {
+      flicker = 0;
+    }
 
     if (introClock < 1) introClock = Math.min(1, introClock + dt / INTRO_SECONDS);
     const { roomDepth } = roomSize();
@@ -739,6 +770,7 @@ function createGridScan(container, options = {}) {
       Math.abs(eye.vx) + Math.abs(eye.vy) + Math.abs(eye.vf) > 1e-4;
     const busy =
       introClock < 1 ||
+      flicker > 0.01 ||
       (!reduce && settings.autoScan) ||
       !scan.waiting ||
       pings.length > 0 ||
@@ -822,6 +854,7 @@ function createGridScan(container, options = {}) {
 
   return {
     canvas,
+    flicker: flickerEffect,
     show() {
       container.style.display = 'block';
       visible = true;
